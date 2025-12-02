@@ -45,15 +45,17 @@ body {
 .book-container {
   position: relative;
   z-index: 2;
-  max-width: 900px;
-  margin: 20px auto;
+  max-width: 960px; /* slightly wider */
+  margin: 24px auto;
+  padding: 0 12px;  /* keeps it off the screen edges on mobile */
   perspective: 2000px;
 }
 
 /* Book Cover */
 .book-cover {
   width: 100%;
-  height: 100vh;
+  /* was height: 100vh; this can feel huge/awkward on some screens */
+  height: clamp(420px, 80vh, 720px);
   background: linear-gradient(145deg, #2d1b4e 0%, #1a0f2e 100%);
   border: 3px solid #8b6914;
   border-radius: 10px;
@@ -128,8 +130,10 @@ body {
   background: linear-gradient(to bottom, #f4e4c1 0%, #e8d4a8 100%);
   border: 3px solid #8b6914;
   border-radius: 10px;
-  min-height: 100vh;
+  /* min-height: 100vh; can be overkill inside a container */
+  min-height: 70vh;
   position: relative;
+  margin-top: 20px;          /* separates cover and open pages a bit */
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
               inset 0 0 100px rgba(139, 105, 20, 0.1);
   animation: pageOpen 1s ease-out;
@@ -169,8 +173,10 @@ body {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 16px;             /* helps on medium widths */
   border-bottom: 2px solid #8b6914;
   position: relative;
+  flex-wrap: wrap;       /* allows header content to wrap on smaller screens */
 }
 
 .header-ornament {
@@ -268,8 +274,8 @@ body {
 
 /* Content */
 .grimoire-content {
-  padding: 30px;
-  min-height: 600px;
+  padding: 30px 32px;
+  min-height: 480px; /* slightly less tall, still roomy */
 }
 
 .spell-view {
@@ -341,6 +347,7 @@ body {
   list-style: none;
   display: grid;
   gap: 15px;
+  grid-template-columns: 1fr; /* clean single column by default */
 }
 
 .spell-list li {
@@ -565,6 +572,7 @@ body {
   list-style: none;
   display: grid;
   gap: 20px;
+  grid-template-columns: 1fr; /* clean single column */
 }
 
 .ritual-item {
@@ -594,20 +602,26 @@ body {
   margin: 15px 0;
 }
 
+/* ⬇⬇⬇ VISIBILITY FIX FOR RITUAL STEPS ⬇⬇⬇ */
 .ritual-step {
   padding: 10px;
   margin: 5px 0;
-  background: rgba(106, 75, 138, 0.1);
+  background: rgba(106, 75, 138, 0.08);
   border-left: 3px solid #6a4b8a;
   border-radius: 5px;
+  color: #2d1b4e;      /* dark text so it’s clearly visible */
+  font-size: 15px;
+  line-height: 1.5;
 }
 
 .ritual-step.completed {
-  background: rgba(139, 105, 20, 0.2);
+  background: rgba(139, 105, 20, 0.16);
   border-left-color: #8b6914;
   text-decoration: line-through;
-  opacity: 0.7;
+  opacity: 0.85;
+  color: #3a2a2a;      /* still readable, but feels “faded” */
 }
+/* ⬆⬆⬆ END VISIBILITY FIX ⬆⬆⬆ */
 
 /* Spell Cast Effect */
 .spell-cast-effect {
@@ -684,20 +698,26 @@ body {
   .book-cover h1 { font-size: 32px; }
   .subtitle { font-size: 18px; }
   .rune { font-size: 60px; }
-  
+
   .spell-tabs {
     grid-template-columns: repeat(2, 1fr);
   }
-  
+
   .grimoire-content {
-    padding: 15px;
+    padding: 18px 16px;
+    min-height: auto;
   }
-  
+
   .chapter-title {
     font-size: 24px;
   }
-  
+
   .stat-cards {
     grid-template-columns: 1fr;
+  }
+
+  .grimoire-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 }

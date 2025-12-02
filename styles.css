@@ -213,6 +213,8 @@ body {
   color: #6a0dad;
   text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
   font-family: 'Cinzel', serif;
+  text-align: center;     /* ← center the number */
+  width: 100%;            /* ← ensures centering in flex layouts */
 }
 
 .mana-label {
@@ -220,6 +222,8 @@ body {
   color: #5a4a7a;
   text-transform: uppercase;
   letter-spacing: 2px;
+  text-align: center;     /* ← center the label text */
+  width: 100%;            /* ← prevents it from hugging left edges */
 }
 
 .level-display {
@@ -230,6 +234,9 @@ body {
   border: 2px solid #8b6914;
   border-radius: 20px;
   background: rgba(212, 175, 55, 0.1);
+  margin: 0 auto;          /* ← centers the level badge */
+  display: inline-block;   /* ← ensures it sizes correctly when centered */
+  text-align: center;      /* ← centers its text */
 }
 
 /* Tabs */

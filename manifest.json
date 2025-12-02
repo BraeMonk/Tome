@@ -1,6 +1,6 @@
 {
-  "name": "Arcane Grimoire",
-  "short_name": "Grimoire",
+  "name": "Tome",
+  "short_name": "Tome",
   "start_url": "index.html",
   "display": "standalone",
   "background_color": "#0a0604",

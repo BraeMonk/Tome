@@ -246,10 +246,14 @@ body {
   grid-template-columns: repeat(4, 1fr);
   background: #3a2a5a;
   border-bottom: 2px solid #8b6914;
+  position: relative;   /* so we can control stacking */
+  z-index: 2;           /* sit above page edges etc */
 }
 
 .spell-tab {
-  padding: 15px 10px;
+  width: 100%;          /* fill the whole grid cell horizontally */
+  height: 100%;         /* let padding define a big tap area */
+  padding: 18px 10px;   /* slightly bigger tap target */
   border: none;
   background: transparent;
   color: #d4c4a4;
@@ -261,6 +265,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
+  justify-content: center; /* center icon + text in the hitbox */
   gap: 5px;
 }
 
@@ -711,6 +716,10 @@ body {
 
   .spell-tabs {
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .spell-tab {
+    padding: 20px 12px;
   }
 
   .grimoire-content {

@@ -609,7 +609,7 @@ body {
   background: rgba(106, 75, 138, 0.08);
   border-left: 3px solid #6a4b8a;
   border-radius: 5px;
-  color: #2d1b4e;      /* dark text so it’s clearly visible */
+  color: #6a0dad;      /* dark text so it’s clearly visible */
   font-size: 15px;
   line-height: 1.5;
 }
@@ -619,7 +619,7 @@ body {
   border-left-color: #8b6914;
   text-decoration: line-through;
   opacity: 0.85;
-  color: #3a2a2a;      /* still readable, but feels “faded” */
+  color: #6a0dad;      /* still readable, but feels “faded” */
 }
 /* ⬆⬆⬆ END VISIBILITY FIX ⬆⬆⬆ */
 

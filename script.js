@@ -342,12 +342,18 @@ document.addEventListener('click', e => {
     renderDaily();
   }
   
-  if (e.target.dataset.tab) {
+    // --- Tab switching ---
+  const tabButton = e.target.closest('.spell-tab');
+  if (tabButton) {
+    const tabId = tabButton.dataset.tab;
+    if (!tabId) return;
+
     document.querySelectorAll('.spell-tab').forEach(b => b.classList.remove('active'));
-    e.target.closest('.spell-tab').classList.add('active');
-    
+    tabButton.classList.add('active');
+
     document.querySelectorAll('.spell-view').forEach(v => v.classList.remove('active'));
-    document.getElementById(e.target.dataset.tab).classList.add('active');
+    const view = document.getElementById(tabId);
+    if (view) view.classList.add('active');
   }
   
   if (e.target.classList.contains('ritual-step')) {

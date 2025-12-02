@@ -169,19 +169,21 @@ body {
 /* Header */
 .grimoire-header {
   background: linear-gradient(to bottom, #2d1b4e 0%, transparent 100%);
-  padding: 20px;
+  padding: 25px 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 16px;             /* helps on medium widths */
+  flex-direction: column;       /* stack elements vertically */
+  align-items: center;          /* center horizontally */
+  justify-content: center;      /* center vertically */
+  gap: 12px;                    /* spacing between elements */
   border-bottom: 2px solid #8b6914;
-  position: relative;
-  flex-wrap: wrap;       /* allows header content to wrap on smaller screens */
+  text-align: center;           /* make all text centered */
 }
 
 .header-ornament {
   font-size: 24px;
   color: #8b6914;
+  text-align: center;
+  width: 100%;
 }
 
 .mana-crystal {

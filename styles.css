@@ -708,6 +708,54 @@ body {
   font-size: 16px;
 }
 
+/* ===== GLOBAL PAGE TEXT CENTERING PASS ===== */
+
+/* Center most content inside the open pages */
+.grimoire-content {
+  text-align: center;
+}
+
+/* Center spell library section headings and category titles */
+.spell-category,
+.category-title {
+  text-align: center;
+}
+
+.category-title {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Center everything inside spell cards */
+.spell-list li {
+  text-align: center;
+}
+
+.spell-name,
+.spell-desc,
+.spell-reward {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+/* Center ritual card content */
+.ritual-item {
+  text-align: center;
+}
+
+.ritual-title,
+.ritual-desc {
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+/* Center the “Progress: X/Y” line inside rituals */
+.ritual-item > div[style*="Progress"] {
+  text-align: center !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .book-cover h1 { font-size: 32px; }

@@ -171,12 +171,13 @@ body {
   background: linear-gradient(to bottom, #2d1b4e 0%, transparent 100%);
   padding: 25px 20px;
   display: flex;
-  flex-direction: column;       /* stack elements vertically */
-  align-items: center;          /* center horizontally */
-  justify-content: center;      /* center vertically */
-  gap: 12px;                    /* spacing between elements */
+  flex-direction: column;
+  align-items: center;    /* ← THIS centers everything in the header */
+  justify-content: center;
+  gap: 12px;
   border-bottom: 2px solid #8b6914;
-  text-align: center;           /* make all text centered */
+  text-align: center;
+  width: 100%;            /* ← prevents shifting */
 }
 
 .header-ornament {
@@ -213,8 +214,8 @@ body {
   color: #6a0dad;
   text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
   font-family: 'Cinzel', serif;
-  text-align: center;     /* ← center the number */
-  width: 100%;            /* ← ensures centering in flex layouts */
+  text-align: center;
+  width: 100%;          /* ← forces full-width centering */
 }
 
 .mana-label {
@@ -222,8 +223,8 @@ body {
   color: #5a4a7a;
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-align: center;     /* ← center the label text */
-  width: 100%;            /* ← prevents it from hugging left edges */
+  text-align: center;  
+  width: 100%;          /* ← also forces centering */
 }
 
 .level-display {

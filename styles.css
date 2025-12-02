@@ -1,0 +1,10 @@
+body{margin:0;background:#0b0a0e;color:#fff;font-family:sans-serif;}
+header{padding:12px;background:#18161f;display:flex;justify-content:space-between;}
+.tabs{display:flex;background:#221f29;}
+.tab{flex:1;padding:10px;border:none;background:#221f29;color:#fff;}
+.tab.active{background:#4a3c5d;}
+.view{display:none;padding:10px;}
+.view.active{display:block;}
+button{background:#6a4b8a;border:none;color:#fff;padding:8px 12px;border-radius:4px;margin:6px 0;}
+ul{list-style:none;padding:0;}
+li{background:#1d1b26;padding:10px;margin:6px 0;border-radius:6px;}

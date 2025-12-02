@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+<meta charset='UTF-8'>
+<meta name='viewport' content='width=device-width, initial-scale=1.0'>
+<title>Magical Grimoire OS</title>
+<link rel='manifest' href='manifest.json'>
+<link rel='stylesheet' href='styles.css'>
+</head>
+<body>
+
+<header>
+  <h1>📖 Magical Grimoire OS</h1>
+  <div id='manaDisplay'>✨0</div>
+</header>
+
+<nav class='tabs'>
+  <button class='tab active' data-tab='daily'>Daily</button>
+  <button class='tab' data-tab='spells'>Spells</button>
+  <button class='tab' data-tab='stats'>Stats</button>
+</nav>
+
+<main>
+  <section id='daily' class='view active'>
+    <h2>Daily Spells</h2>
+    <button id='newSpread'>New Spread</button>
+    <ul id='dailyList'></ul>
+  </section>
+
+  <section id='spells' class='view'>
+    <h2>Spell Library</h2>
+    <ul id='library'></ul>
+  </section>
+
+  <section id='stats' class='view'>
+    <h2>Progress</h2>
+    <p>Total casts: <span id='totalCasts'>0</span></p>
+    <p>Streak: <span id='streak'>0</span></p>
+  </section>
+</main>
+
+<script src='script.js'></script>
+<script>
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.register('service-worker.js');
+}
+</script>
+
+</body>
+</html>

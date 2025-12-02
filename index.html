@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arcane Grimoire PWA</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="manifest" href="manifest.json">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div id="app">
+  <header class="app-header">
+    <div class="title-block">
+      <h1>📖 Arcane Grimoire</h1>
+      <p class="subtitle">Spellbook for real‑world magic</p>
+    </div>
+    <div class="stats-block">
+      <div class="pill">
+        <span>✨</span>
+        <span id="manaAmount">0</span>
+      </div>
+      <div class="pill">
+        <span>📚</span>
+        <span id="grimoireLevel">1</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="main-layout">
+    <section class="canvas-wrap">
+      <canvas id="bookCanvas"></canvas>
+    </section>
+
+    <section class="ui-panel">
+      <nav class="tabs">
+        <button class="tab active" data-tab="daily">🔮 Daily Spread</button>
+        <button class="tab" data-tab="spells">📜 Spell Library</button>
+        <button class="tab" data-tab="rituals">🕯 Rituals</button>
+        <button class="tab" data-tab="stats">📈 Progress</button>
+      </nav>
+
+      <section id="dailyTab" class="tab-view active">
+        <header class="section-header">
+          <h2>Today’s Spread</h2>
+          <button id="rerollDaily" class="btn ghost">New Spread</button>
+        </header>
+        <p class="section-hint">These are your “quests” for today. Cast them by actually doing the thing.</p>
+        <ul id="dailyList" class="card-list"></ul>
+      </section>
+
+      <section id="spellsTab" class="tab-view">
+        <header class="section-header">
+          <h2>Spell Library</h2>
+          <select id="schoolFilter" class="select">
+            <option value="all">All schools</option>
+            <option value="focus">Focus</option>
+            <option value="body">Body</option>
+            <option value="mind">Mind</option>
+            <option value="connection">Connection</option>
+            <option value="restore">Restoration</option>
+          </select>
+        </header>
+        <div id="spellList" class="card-list"></div>
+      </section>
+
+      <section id="ritualsTab" class="tab-view">
+        <header class="section-header">
+          <h2>Candle Ritual</h2>
+        </header>
+        <p class="section-hint">
+          A tiny guided ritual to reset your brain. No audio, just a visual countdown.
+        </p>
+        <div class="ritual-box">
+          <p id="ritualStatus">No ritual active.</p>
+          <div id="ritualTimer" class="ritual-timer">00:00</div>
+          <div class="ritual-controls">
+            <button data-min="1" class="btn small">1 min</button>
+            <button data-min="3" class="btn small">3 min</button>
+            <button data-min="5" class="btn small">5 min</button>
+          </div>
+        </div>
+      </section>
+
+      <section id="statsTab" class="tab-view">
+        <header class="section-header">
+          <h2>Progress</h2>
+        </header>
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="label">Total Spells Cast</div>
+            <div class="value" id="totalCasts">0</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Current Streak</div>
+            <div class="value" id="currentStreak">0</div>
+            <div class="sub">days in a row</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Best Streak</div>
+            <div class="value" id="bestStreak">0</div>
+            <div class="sub">personal record</div>
+          </div>
+          <div class="stat-card">
+            <div class="label">Active Days</div>
+            <div class="value" id="activeDays">0</div>
+            <div class="sub">days you used the book</div>
+          </div>
+        </div>
+      </section>
+    </section>
+  </main>
+</div>
+
+<script src="script.js"></script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('service-worker.js');
+  });
+}
+</script>
+</body>
+</html>

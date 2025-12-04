@@ -1694,7 +1694,7 @@ body {
 /* Desktop / default – moderately tight */
 .orbit-spells {
   transform-origin: 50% 50%;
-  transform: scale(0.75);  /* smaller number = tighter ring */
+  transform: scale(0.65);  /* smaller number = tighter ring */
 }
 
 /* Phones – a bit tighter so nothing hugs the edge */

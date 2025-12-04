@@ -235,12 +235,16 @@ body {
   z-index: 2;
 }
 
-/* Circular daily spells */
+/* Circular daily spells – tight floating orbit */
 
 .orbit-spells {
   position: absolute;
   inset: 0;
   pointer-events: none;
+
+  /* tighten radius around the orb */
+  transform-origin: 50% 50%;
+  transform: scale(0.85); /* desktop radius */
 }
 
 .orbit-spell {
@@ -251,8 +255,7 @@ body {
   padding: 10px 12px;
   border-radius: 14px;
   border: 2px solid rgba(199, 155, 45, 0.4);
-  background:
-    linear-gradient(135deg, #fffdf8 0%, #f8e8d0 50%, #f0d8b8 100%);
+  background: linear-gradient(135deg, #fffdf8 0%, #f8e8d0 50%, #f0d8b8 100%);
   box-shadow:
     0 8px 20px rgba(0, 0, 0, 0.5),
     0 0 15px rgba(255, 227, 187, 0.8),
@@ -260,13 +263,22 @@ body {
   text-align: center;
   pointer-events: auto;
   cursor: pointer;
+
+  /* center on the middle, actual orbit handled in animation */
   transform: translate(-50%, -50%);
   transition: all 0.2s ease;
-  animation: orbitFloat 3s ease-in-out infinite;
+  animation: orbitDrift 16s ease-in-out infinite;
 }
 
+/* staggered delays so they don't all move together */
+.orbit-spell:nth-child(2) { animation-delay: -3s; }
+.orbit-spell:nth-child(3) { animation-delay: -6s; }
+.orbit-spell:nth-child(4) { animation-delay: -9s; }
+.orbit-spell:nth-child(5) { animation-delay: -12s; }
+.orbit-spell:nth-child(6) { animation-delay: -15s; }
+
 .orbit-spell:hover {
-  transform: translate(-50%, -50%) translateY(-6px) scale(1.05);
+  transform: translate(-50%, -50%) scale(1.05);
   box-shadow:
     0 12px 30px rgba(0, 0, 0, 0.6),
     0 0 25px rgba(255, 215, 0, 1),
@@ -1446,6 +1458,24 @@ body {
   }
 }
 
+@keyframes orbitDrift {
+  0% {
+    transform: translate(-50%, -50%) translate(0, -40px);
+  }
+  25% {
+    transform: translate(-50%, -50%) translate(40px, 0);
+  }
+  50% {
+    transform: translate(-50%, -50%) translate(0, 40px);
+  }
+  75% {
+    transform: translate(-50%, -50%) translate(-40px, 0);
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(0, -40px);
+  }
+}
+
 @keyframes iconBounce {
   0%, 100% {
     transform: translateY(0);
@@ -1549,71 +1579,15 @@ body {
   }
 }
 
-/* =====================================
-   TIGHTER ORBIT + FLOATING SPELLS
-====================================== */
-
-/* Make sure we never get horizontal scroll from the orbit */
-html,
-body {
-  overflow-x: hidden;
-}
-
-/* Tighten orbit on smaller screens */
 @media (max-width: 768px) {
-  .orbit-wrapper {
-    width: 80vw;              /* smaller than full width */
-    max-width: 320px;         /* hard cap so it stays off the edges */
-    aspect-ratio: 1 / 1;
-    margin: 20px auto 16px;
-  }
-
-  .home-orb {
-    width: 130px;
-    height: 130px;
-  }
-
-  .home-orb-mana {
-    font-size: 28px;
-  }
-
-  .orbit-spell {
-    padding: 8px 10px;
-  }
-
-  .orbit-spell-name {
-    font-size: 13px;
-  }
-
-  .orbit-spell-reward {
-    font-size: 11px;
+  .orbit-spells {
+    transform: scale(0.75);   /* tighter radius on phones */
   }
 }
 
-/* Replace the tiny up-down bob with a wider drifting motion */
-.orbit-spell {
-  /* kill the old bobbing animation defined earlier */
-  animation: orbitDrift 18s ease-in-out infinite;
-}
-
-@keyframes orbitDrift {
-  0% {
-    transform: translate(-50%, -50%) translate(0, 0);
-  }
-  20% {
-    transform: translate(-50%, -50%) translate(18px, -10px);
-  }
-  40% {
-    transform: translate(-50%, -50%) translate(6px, -22px);
-  }
-  60% {
-    transform: translate(-50%, -50%) translate(-18px, -8px);
-  }
-  80% {
-    transform: translate(-50%, -50%) translate(-10px, 18px);
-  }
-  100% {
-    transform: translate(-50%, -50%) translate(0, 0);
+@media (max-width: 480px) {
+  .orbit-spells {
+    transform: scale(0.7);    /* extra tight on very small phones */
   }
 }
 

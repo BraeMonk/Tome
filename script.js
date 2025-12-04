@@ -1,4 +1,4 @@
-// ================== DATA ==================
+// ================= BASE SPELL DATA =================
 const SPELLS = {
   body: [
     {id:'water',name:'Hydration Charm',reward:5,desc:'Drink a full glass of pure water.',category:'body'},
@@ -36,7 +36,7 @@ const SPELLS = {
   ]
 };
 
-const RITUALS_BASE = [
+const BASE_RITUALS = [
   {
     id:'morning',
     name:'Dawn Awakening Ritual',
@@ -60,6 +60,8 @@ const RITUALS_BASE = [
   }
 ];
 
+let RITUALS = [...BASE_RITUALS];
+
 const ACHIEVEMENTS = [
   {id:'first_cast',name:'First Spell',desc:'Cast your first spell',icon:'✨'},
   {id:'streak_3',name:'Dedicated',desc:'3 day streak',icon:'🔥'},
@@ -72,7 +74,7 @@ const ACHIEVEMENTS = [
   {id:'ritual_complete',name:'Ritualist',desc:'Complete your first ritual',icon:'🕯️'}
 ];
 
-// ================== STATE ==================
+// ================= STATE =================
 let state = {
   mana: 0,
   totalCasts: 0,
@@ -84,8 +86,8 @@ let state = {
   xp: 0,
   ritualProgress: {},
   categoriesCast: [],
-  customSpells: [],     // per-category
-  customRituals: []     // appended after base rituals
+  customSpells: [],      // {id,name,reward,desc,category}
+  customRituals: []      // {id,name,desc,steps[],reward}
 };
 
 function today() {
@@ -99,7 +101,12 @@ function save() {
 function load() {
   const s = localStorage.getItem('grimoireOS');
   if (s) {
-    state = JSON.parse(s);
+    try {
+      const parsed = JSON.parse(s);
+      Object.assign(state, parsed);
+    } catch (e) {
+      console.warn('Failed to parse saved state', e);
+    }
   }
   if (!state.achievements) state.achievements = [];
   if (!state.level) state.level = 1;
@@ -108,9 +115,23 @@ function load() {
   if (!state.categoriesCast) state.categoriesCast = [];
   if (!state.customSpells) state.customSpells = [];
   if (!state.customRituals) state.customRituals = [];
+
+  // Rehydrate custom spells into SPELLS
+  state.customSpells.forEach(sp => {
+    if (SPELLS[sp.category] && !SPELLS[sp.category].some(b => b.id === sp.id)) {
+      SPELLS[sp.category].push(sp);
+    }
+  });
+
+  // Rehydrate custom rituals
+  state.customRituals.forEach(r => {
+    if (!RITUALS.some(base => base.id === r.id)) {
+      RITUALS.push(r);
+    }
+  });
 }
 
-// ================== LEVEL / TITLES ==================
+// ================= LEVEL / TITLES =================
 function calculateLevel(xp) {
   return Math.floor(xp / 100) + 1;
 }
@@ -124,9 +145,9 @@ function getLevelTitle(level) {
   return 'Grand Sorcerer';
 }
 
-// ================== ACHIEVEMENTS ==================
+// ================= ACHIEVEMENTS =================
 function checkAchievements() {
-  const newUnlocks = [];
+  const newly = [];
 
   ACHIEVEMENTS.forEach(ach => {
     if (state.achievements.includes(ach.id)) return;
@@ -143,126 +164,184 @@ function checkAchievements() {
       case 'all_categories': unlock = state.categoriesCast.length >= 4; break;
       case 'ritual_complete':
         unlock = Object.values(state.ritualProgress).some(steps =>
-          steps.filter(s => s).length === steps.length
+          steps.filter(Boolean).length === steps.length && steps.length > 0
         );
         break;
     }
 
     if (unlock) {
       state.achievements.push(ach.id);
-      newUnlocks.push(ach);
+      newly.push(ach);
     }
   });
 
-  return newUnlocks;
+  return newly;
 }
 
-// ================== EFFECTS ==================
+// ================= FX: SPELL CAST =================
 function showSpellEffect(mana) {
   const effect = document.getElementById('spellEffect');
   const manaText = document.getElementById('effectMana');
-  if (!effect || !manaText) return;
-
   manaText.textContent = mana;
   effect.classList.add('active');
+  triggerSpellCanvasBurst();
 
   setTimeout(() => {
     effect.classList.remove('active');
   }, 600);
 }
 
-// (optional) spell canvas particles: lightweight placeholder
-function flashSpellCanvas() {
-  const canvas = document.getElementById('spellCanvas');
-  if (!canvas) return;
-  const ctx = canvas.getContext('2d');
-  const resize = () => {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-  };
-  resize();
+// Canvas particles
+let spellCanvas, spellCtx;
+function initSpellCanvas() {
+  spellCanvas = document.getElementById('spellCanvas');
+  if (!spellCanvas) return;
+  spellCanvas.width = window.innerWidth;
+  spellCanvas.height = window.innerHeight;
+  spellCtx = spellCanvas.getContext('2d');
+}
+window.addEventListener('resize', () => {
+  if (!spellCanvas) return;
+  spellCanvas.width = window.innerWidth;
+  spellCanvas.height = window.innerHeight;
+});
+
+function triggerSpellCanvasBurst() {
+  if (!spellCanvas || !spellCtx) return;
+  spellCanvas.classList.add('active');
 
   const particles = [];
+  const cx = spellCanvas.width / 2;
+  const cy = spellCanvas.height / 2;
+
   for (let i = 0; i < 40; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 1 + Math.random() * 3;
     particles.push({
-      x: canvas.width / 2,
-      y: canvas.height / 2,
-      vx: (Math.random() - 0.5) * 6,
-      vy: (Math.random() - 0.5) * 6,
-      life: 0,
-      maxLife: 25 + Math.random() * 20
+      x: cx,
+      y: cy,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 400 + Math.random() * 300
     });
   }
 
-  let frame = 0;
-  canvas.classList.add('active');
+  const start = performance.now();
+  function frame(t) {
+    const elapsed = t - start;
+    spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
 
-  function tick() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    frame++;
     particles.forEach(p => {
+      const progress = elapsed / p.life;
+      if (progress >= 1) return;
       p.x += p.vx;
       p.y += p.vy;
-      p.life++;
-      const alpha = 1 - p.life / p.maxLife;
-      ctx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
-      ctx.beginPath();
-      ctx.arc(p.x, p.y, 2 + Math.random() * 2, 0, Math.PI * 2);
-      ctx.fill();
+      spellCtx.globalAlpha = 1 - progress;
+      spellCtx.fillStyle = '#ffe9a6';
+      spellCtx.beginPath();
+      spellCtx.arc(p.x, p.y, 2.2, 0, Math.PI * 2);
+      spellCtx.fill();
     });
-    if (frame < 50) {
-      requestAnimationFrame(tick);
+
+    if (elapsed < 700) {
+      requestAnimationFrame(frame);
     } else {
-      canvas.classList.remove('active');
+      spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
+      spellCanvas.classList.remove('active');
     }
   }
-  tick();
+
+  requestAnimationFrame(frame);
 }
 
-// ================== DAILY GENERATION ==================
-function generateDaily() {
-  const allSpells = [
+// ================= AMBIENT AUDIO =================
+let ambienceStarted = false;
+let audioCtx, ambienceNodes = [];
+
+function startAmbience() {
+  if (ambienceStarted) return;
+  ambienceStarted = true;
+  try {
+    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+    // Two gentle detuned sines for a pad
+    function createPadOsc(freq, detune) {
+      const osc = audioCtx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freq;
+      osc.detune.value = detune;
+      const gain = audioCtx.createGain();
+      gain.gain.value = 0.02; // super subtle
+      osc.connect(gain).connect(audioCtx.destination);
+      osc.start();
+      ambienceNodes.push(osc, gain);
+    }
+
+    createPadOsc(110, -5);
+    createPadOsc(220, 7);
+  } catch (e) {
+    console.warn('Ambient audio failed:', e);
+  }
+}
+
+function nudgeAmbience() {
+  if (!ambienceStarted) startAmbience();
+  if (audioCtx && audioCtx.state === 'suspended') {
+    audioCtx.resume();
+  }
+}
+
+// ================= DAILY GENERATION =================
+function allSpellsArray() {
+  return [
     ...SPELLS.body,
     ...SPELLS.mind,
     ...SPELLS.spirit,
     ...SPELLS.environment
   ];
-  state.daily = allSpells
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 5)
-    .map(s => s.id);
+}
+
+function generateDaily() {
+  const allSpells = allSpellsArray();
+  const shuffled = [...allSpells].sort(() => 0.5 - Math.random());
+  state.daily = shuffled.slice(0, 5).map(s => s.id);
   state.lastDay = today();
   save();
 }
 
-// ================== RENDERING ==================
+// ================= RENDERING =================
 function renderHeader() {
   const manaEl = document.getElementById('manaDisplay');
-  const totalCastsEl = document.getElementById('totalCasts');
+  const totalEl = document.getElementById('totalCasts');
   const streakEl = document.getElementById('streak');
-  const levelEl = document.getElementById('level');
+  const levelStatEl = document.getElementById('levelStat');
   const levelDisplayEl = document.getElementById('levelDisplay');
-  const xpFillEl = document.getElementById('xpFill');
-  const xpTextEl = document.getElementById('xpText');
+  const levelEl = document.getElementById('level');
 
-  // book header
   if (manaEl) manaEl.textContent = state.mana;
-  if (totalCastsEl) totalCastsEl.textContent = state.totalCasts;
+  if (totalEl) totalEl.textContent = state.totalCasts;
   if (streakEl) streakEl.textContent = state.streak;
+  if (levelStatEl) levelStatEl.textContent = state.level;
   if (levelEl) levelEl.textContent = state.level;
   if (levelDisplayEl) levelDisplayEl.textContent = getLevelTitle(state.level);
 
   const xpProgress = state.xp % 100;
+  const xpFillEl = document.getElementById('xpFill');
+  const xpTextEl = document.getElementById('xpText');
   if (xpFillEl) xpFillEl.style.width = xpProgress + '%';
-  if (xpTextEl) xpTextEl.textContent = `${xpProgress} / 100 XP`;
+  if (xpTextEl) xpTextEl.textContent = xpProgress + ' / 100 XP';
 
-  // home orb
-  const homeMana = document.getElementById('homeMana');
-  const homeLevelTitle = document.getElementById('homeLevelTitle');
-  const homeLevelNumber = document.getElementById('homeLevelNumber');
-  if (homeMana) homeMana.textContent = state.mana;
-  if (homeLevelTitle) homeLevelTitle.textContent = getLevelTitle(state.level);
-  if (homeLevelNumber) homeLevelNumber.textContent = `Lv ${state.level}`;
+  renderHomeStats();
+}
+
+function renderHomeStats() {
+  const manaHome = document.getElementById('homeManaDisplay');
+  const lvlTitleHome = document.getElementById('homeLevelTitle');
+  const lvlNumberHome = document.getElementById('homeLevelNumber');
+
+  if (manaHome) manaHome.textContent = state.mana;
+  if (lvlTitleHome) lvlTitleHome.textContent = getLevelTitle(state.level);
+  if (lvlNumberHome) lvlNumberHome.textContent = state.level;
 }
 
 function renderDaily() {
@@ -270,17 +349,11 @@ function renderDaily() {
   if (!ul) return;
   ul.innerHTML = '';
 
-  const allSpells = [
-    ...SPELLS.body,
-    ...SPELLS.mind,
-    ...SPELLS.spirit,
-    ...SPELLS.environment
-  ];
+  const allSpells = allSpellsArray();
 
   state.daily.forEach(id => {
     const sp = allSpells.find(s => s.id === id);
     if (!sp) return;
-
     const li = document.createElement('li');
     li.innerHTML = `
       <span class="spell-name">${sp.name}</span>
@@ -291,18 +364,50 @@ function renderDaily() {
     ul.appendChild(li);
   });
 
-  renderHomeOrbit();
+  renderOrbitDaily();
 }
 
-function renderSpellCategory(category, elementId) {
+function renderOrbitDaily() {
+  const container = document.getElementById('orbitDailyContainer');
+  if (!container) return;
+  container.innerHTML = '';
+
+  const allSpells = allSpellsArray();
+  const n = state.daily.length;
+  if (n === 0) return;
+
+  const radius = 37; // percent of container
+  state.daily.forEach((id, idx) => {
+    const sp = allSpells.find(s => s.id === id);
+    if (!sp) return;
+
+    const angle = (2 * Math.PI * idx) / n - Math.PI / 2;
+    const x = 50 + Math.cos(angle) * radius;
+    const y = 50 + Math.sin(angle) * radius;
+
+    const card = document.createElement('button');
+    card.className = 'orbit-spell';
+    card.dataset.cast = id;
+    card.style.left = x + '%';
+    card.style.top = y + '%';
+    card.innerHTML = `
+      <div class="orbit-spell-name">${sp.name}</div>
+      <div class="orbit-spell-reward">+${sp.reward} ✨</div>
+    `;
+    container.appendChild(card);
+  });
+}
+
+function renderSpellCategory(category, elementId, filterText = '') {
   const ul = document.getElementById(elementId);
   if (!ul) return;
   ul.innerHTML = '';
 
-  const base = SPELLS[category] || [];
-  const custom = state.customSpells.filter(s => s.category === category);
+  const list = SPELLS[category] || [];
+  const q = filterText.trim().toLowerCase();
 
-  [...base, ...custom].forEach(sp => {
+  list.forEach(sp => {
+    if (q && !(sp.name.toLowerCase().includes(q) || sp.desc.toLowerCase().includes(q))) return;
     const li = document.createElement('li');
     li.innerHTML = `
       <span class="spell-name">${sp.name}</span>
@@ -310,6 +415,17 @@ function renderSpellCategory(category, elementId) {
       <span class="spell-reward">+${sp.reward} ✨ Mana</span>
     `;
     ul.appendChild(li);
+  });
+}
+
+function renderSpellLibrary(filterCategory = 'all', searchText = '') {
+  const categories = ['body', 'mind', 'spirit', 'environment'];
+  categories.forEach(cat => {
+    if (filterCategory !== 'all' && filterCategory !== cat) {
+      renderSpellCategory(cat, cat + 'Spells', searchText + ' __filterout__'); // cheap skip
+    } else {
+      renderSpellCategory(cat, cat + 'Spells', searchText);
+    }
   });
 }
 
@@ -331,40 +447,37 @@ function renderAchievements() {
   });
 }
 
-function getAllRituals() {
-  return [...RITUALS_BASE, ...state.customRituals];
-}
-
 function renderRituals() {
   const ul = document.getElementById('ritualsList');
   if (!ul) return;
   ul.innerHTML = '';
 
-  getAllRituals().forEach(ritual => {
+  RITUALS.forEach(ritual => {
     if (!state.ritualProgress[ritual.id]) {
       state.ritualProgress[ritual.id] = new Array(ritual.steps.length).fill(false);
     }
-
     const progress = state.ritualProgress[ritual.id];
-    const completed = progress.filter(s => s).length;
+    const completed = progress.filter(Boolean).length;
     const total = ritual.steps.length;
+
+    const li = document.createElement('li');
+    li.className = 'ritual-item';
 
     let stepsHtml = '<ul class="ritual-steps">';
     ritual.steps.forEach((step, idx) => {
+      const done = progress[idx];
       stepsHtml += `
-        <li class="ritual-step ${progress[idx] ? 'completed' : ''}" data-ritual="${ritual.id}" data-step="${idx}">
-          ${progress[idx] ? '✓' : '○'} ${step}
+        <li class="ritual-step ${done ? 'completed' : ''}" data-ritual="${ritual.id}" data-step="${idx}">
+          ${done ? '✓' : '○'} ${step}
         </li>
       `;
     });
     stepsHtml += '</ul>';
 
-    const li = document.createElement('li');
-    li.className = 'ritual-item';
     li.innerHTML = `
       <div class="ritual-title">${ritual.name}</div>
       <div class="ritual-desc">${ritual.desc}</div>
-      <div style="margin: 6px 0; font-weight: bold; color: #6a0dad;">Progress: ${completed}/${total}</div>
+      <div style="margin: 10px 0; font-weight: bold; color: #6a0dad;">Progress: ${completed}/${total}</div>
       ${stepsHtml}
       <span class="spell-reward">Complete for +${ritual.reward} ✨ Mana</span>
     `;
@@ -372,329 +485,262 @@ function renderRituals() {
   });
 }
 
-// ================== HOME ORBIT RENDERING ==================
-function renderHomeOrbit() {
-  const container = document.getElementById('orbitSpells');
-  if (!container) return;
-  container.innerHTML = '';
+// ================= CAST HANDLING =================
+function handleCast(spellId) {
+  const allSpells = allSpellsArray();
+  const sp = allSpells.find(s => s.id === spellId);
+  if (!sp) return;
 
-  const allSpells = [
-    ...SPELLS.body,
-    ...SPELLS.mind,
-    ...SPELLS.spirit,
-    ...SPELLS.environment
-  ];
+  nudgeAmbience();
 
-  const spells = state.daily
-    .map(id => allSpells.find(s => s.id === id))
-    .filter(Boolean);
+  state.mana += sp.reward;
+  state.xp += sp.reward;
+  state.totalCasts++;
 
-  spells.forEach(sp => {
-    const btn = document.createElement('button');
-    btn.className = 'orbit-spell';
-    btn.dataset.cast = sp.id;
-    btn.innerHTML = `
-      <div class="orbit-spell-name">${sp.name}</div>
-      <div class="orbit-spell-reward">+${sp.reward} ✨</div>
-    `;
-    container.appendChild(btn);
-  });
-
-  layoutOrbitSpells();
-}
-
-function layoutOrbitSpells() {
-  const container = document.getElementById('orbitSpells');
-  if (!container) return;
-  const cards = container.querySelectorAll('.orbit-spell');
-  const count = cards.length;
-  if (!count) return;
-
-  const rect = container.getBoundingClientRect();
-  const radius = Math.max(Math.min(rect.width, rect.height) / 2 - 40, 60);
-
-  cards.forEach((card, index) => {
-    const angle = (index / count) * Math.PI * 2 - Math.PI / 2;
-    const x = Math.cos(angle) * radius;
-    const y = Math.sin(angle) * radius;
-    card.style.top = '50%';
-    card.style.left = '50%';
-    card.style.transform = `translate(-50%, -50%) translate(${x}px, ${y}px)`;
-  });
-}
-
-// ================== CUSTOM SPELLS / RITUALS ==================
-function setupCustomForms() {
-  const addSpellBtn = document.getElementById('addCustomSpellButton');
-  const spellForm = document.getElementById('customSpellForm');
-  const saveSpellBtn = document.getElementById('saveCustomSpell');
-  const addRitualBtn = document.getElementById('saveCustomRitual');
-
-  if (addSpellBtn && spellForm) {
-    addSpellBtn.addEventListener('click', () => {
-      spellForm.classList.toggle('hidden');
-    });
+  if (!state.categoriesCast.includes(sp.category)) {
+    state.categoriesCast.push(sp.category);
   }
 
-  if (saveSpellBtn) {
-    saveSpellBtn.addEventListener('click', () => {
-      const nameEl = document.getElementById('customSpellName');
-      const descEl = document.getElementById('customSpellDesc');
-      const rewardEl = document.getElementById('customSpellReward');
-      const categoryEl = document.getElementById('customSpellCategory');
-      if (!nameEl || !descEl || !rewardEl || !categoryEl) return;
-
-      const name = nameEl.value.trim();
-      const desc = descEl.value.trim();
-      const reward = parseInt(rewardEl.value, 10) || 5;
-      const category = categoryEl.value || 'mind';
-
-      if (!name || !desc) return;
-
-      const id = 'custom_' + Date.now();
-      state.customSpells.push({ id, name, desc, reward, category });
-      save();
-
-      renderSpellCategory('body', 'bodySpells');
-      renderSpellCategory('mind', 'mindSpells');
-      renderSpellCategory('spirit', 'spiritSpells');
-      renderSpellCategory('environment', 'environmentSpells');
-      renderHomeOrbit();
-
-      nameEl.value = '';
-      descEl.value = '';
-      rewardEl.value = '10';
-      categoryEl.value = 'body';
-      spellForm.classList.add('hidden');
-    });
-  }
-
-  const saveRitualBtn = document.getElementById('saveCustomRitual');
-  if (saveRitualBtn) {
-    saveRitualBtn.addEventListener('click', () => {
-      const nameEl = document.getElementById('customRitualName');
-      const stepsEl = document.getElementById('customRitualSteps');
-      const rewardEl = document.getElementById('customRitualReward');
-      if (!nameEl || !stepsEl || !rewardEl) return;
-
-      const name = nameEl.value.trim();
-      const reward = parseInt(rewardEl.value, 10) || 30;
-      const lines = stepsEl.value
-        .split('\n')
-        .map(x => x.trim())
-        .filter(Boolean);
-
-      if (!name || !lines.length) return;
-
-      const id = 'ritual_' + Date.now();
-      state.customRituals.push({
-        id,
-        name,
-        desc: 'Custom ritual',
-        steps: lines,
-        reward
-      });
-
-      save();
-      renderRituals();
-
-      nameEl.value = '';
-      stepsEl.value = '';
-      rewardEl.value = '30';
-    });
-  }
-}
-
-// ================== SEARCH ==================
-function setupSpellSearch() {
-  const input = document.getElementById('spellSearch');
-  if (!input) return;
-
-  input.addEventListener('input', () => {
-    const q = input.value.toLowerCase().trim();
-
-    ['bodySpells', 'mindSpells', 'spiritSpells', 'environmentSpells'].forEach(id => {
-      const list = document.getElementById(id);
-      if (!list) return;
-      const items = list.querySelectorAll('li');
-      items.forEach(li => {
-        const text = li.textContent.toLowerCase();
-        li.style.display = text.includes(q) ? '' : 'none';
-      });
-    });
-  });
-}
-
-// ================== BOOK OPEN / MODE HANDLING ==================
-function getUrlParams() {
-  const params = {};
-  const search = window.location.search.substring(1).split('&');
-  search.forEach(part => {
-    if (!part) return;
-    const [k, v] = part.split('=');
-    params[decodeURIComponent(k)] = decodeURIComponent(v || '');
-  });
-  return params;
-}
-
-function openGrimoireTab() {
-  const url = window.location.pathname + '?mode=book';
-  window.open(url, '_blank');
-}
-
-function setupDockClick() {
-  const dock = document.getElementById('bookCoverDock');
-  if (!dock) return;
-  dock.addEventListener('click', openGrimoireTab);
-}
-
-function enterBookMode() {
-  const home = document.getElementById('homeSection');
-  const bookPages = document.getElementById('bookPages');
-  if (home) home.style.display = 'none';
-  if (bookPages) bookPages.classList.add('open');
-
-  const closeBtn = document.getElementById('closeGrimoireButton');
-  if (closeBtn) {
-    closeBtn.addEventListener('click', () => {
-      // try to close tab; if blocked, just go back to base
-      if (window.opener) {
-        window.close();
-      } else {
-        window.location = window.location.pathname;
-      }
-    });
-  }
-}
-
-function setupTabs() {
-  document.addEventListener('click', e => {
-    // Tabs
-    const tabButton = e.target.closest('.spell-tab');
-    if (tabButton) {
-      const tabId = tabButton.dataset.tab;
-      if (!tabId) return;
-
-      document.querySelectorAll('.spell-tab').forEach(b => b.classList.remove('active'));
-      tabButton.classList.add('active');
-
-      document.querySelectorAll('.spell-view').forEach(v => v.classList.remove('active'));
-      const view = document.getElementById(tabId);
-      if (view) view.classList.add('active');
-    }
-  });
-}
-
-// ================== CLICK HANDLER (CAST / DAILY / RITUALS) ==================
-document.addEventListener('click', e => {
-  // CAST from any element with data-cast
-  if (e.target.dataset && e.target.dataset.cast) {
-    const id = e.target.dataset.cast;
-    const allSpells = [
-      ...SPELLS.body,
-      ...SPELLS.mind,
-      ...SPELLS.spirit,
-      ...SPELLS.environment,
-      ...state.customSpells
-    ];
-    const sp = allSpells.find(s => s.id === id);
-    if (!sp) return;
-
-    state.mana += sp.reward;
-    state.xp += sp.reward;
-    state.totalCasts++;
-
-    if (!state.categoriesCast.includes(sp.category)) {
-      state.categoriesCast.push(sp.category);
-    }
-
-    if (state.lastDay === today()) {
-      // streak continues
-    } else if (state.lastDay) {
-      const daysDiff =
-        (new Date(today()).getTime() - new Date(state.lastDay).getTime()) / 86400000;
-      if (daysDiff <= 1.5) {
-        state.streak++;
-      } else {
-        state.streak = 1;
-      }
+  if (state.lastDay === today()) {
+    // streak continues, nothing to do
+  } else if (state.lastDay) {
+    const daysDiff = (new Date(today()).getTime() - new Date(state.lastDay).getTime()) / 86400000;
+    if (daysDiff <= 1.5) {
+      state.streak++;
     } else {
       state.streak = 1;
     }
-
-    state.lastDay = today();
-
-    const oldLevel = state.level;
-    state.level = calculateLevel(state.xp);
-
-    const newAchievements = checkAchievements();
-
-    save();
-    renderHeader();
-    renderAchievements();
-    renderHomeOrbit();
-    showSpellEffect(sp.reward);
-    flashSpellCanvas();
-
-    if (state.level > oldLevel) {
-      alert(`🎉 Level Up! You are now ${getLevelTitle(state.level)} (Level ${state.level})!`);
-    }
-
-    if (newAchievements.length > 0) {
-      newAchievements.forEach(ach => {
-        setTimeout(() => {
-          alert(`🏆 Achievement Unlocked: ${ach.name} - ${ach.desc}`);
-        }, 100);
-      });
-    }
+  } else {
+    state.streak = 1;
   }
 
-  // New daily spread
+  state.lastDay = today();
+
+  const oldLevel = state.level;
+  state.level = calculateLevel(state.xp);
+
+  const newAchievements = checkAchievements();
+
+  save();
+  renderHeader();
+  renderDaily();
+  renderAchievements();
+  showSpellEffect(sp.reward);
+
+  if (state.level > oldLevel) {
+    alert(`🎉 Level Up! You are now ${getLevelTitle(state.level)} (Level ${state.level})!`);
+  }
+
+  if (newAchievements.length > 0) {
+    newAchievements.forEach(ach => {
+      setTimeout(() => {
+        alert(`🏆 Achievement Unlocked: ${ach.name} - ${ach.desc}`);
+      }, 120);
+    });
+  }
+}
+
+// ================= EVENT LISTENERS =================
+
+// Click delegation
+document.addEventListener('click', e => {
+  const castId = e.target.dataset.cast;
+  if (castId) {
+    handleCast(castId);
+    return;
+  }
+
+  // Daily "Draw New Spread" in book
   if (e.target.id === 'newSpread') {
     generateDaily();
     renderDaily();
+    save();
+    return;
   }
 
-  // Ritual steps
+  // Daily "Draw New Spread" on home
+  if (e.target.id === 'newSpreadHome') {
+    generateDaily();
+    renderDaily();
+    save();
+    return;
+  }
+
+  // Tab switching
+  const tabButton = e.target.closest('.spell-tab');
+  if (tabButton) {
+    const tabId = tabButton.dataset.tab;
+    if (!tabId) return;
+    document.querySelectorAll('.spell-tab').forEach(b => b.classList.remove('active'));
+    tabButton.classList.add('active');
+    document.querySelectorAll('.spell-view').forEach(v => v.classList.remove('active'));
+    const view = document.getElementById(tabId);
+    if (view) view.classList.add('active');
+    return;
+  }
+
+  // Ritual step toggle
   if (e.target.classList.contains('ritual-step')) {
     const ritualId = e.target.dataset.ritual;
     const stepIdx = parseInt(e.target.dataset.step, 10);
-    if (!ritualId) return;
+    if (!ritualId || isNaN(stepIdx)) return;
 
-    state.ritualProgress[ritualId][stepIdx] = !state.ritualProgress[ritualId][stepIdx];
+    const progress = state.ritualProgress[ritualId] || [];
+    progress[stepIdx] = !progress[stepIdx];
+    state.ritualProgress[ritualId] = progress;
 
-    const ritual = getAllRituals().find(r => r.id === ritualId);
-    const allComplete = state.ritualProgress[ritualId].every(s => s);
+    const ritual = RITUALS.find(r => r.id === ritualId);
+    const allComplete = progress.length > 0 && progress.every(Boolean);
 
-    if (ritual && allComplete) {
+    if (allComplete && ritual) {
+      nudgeAmbience();
       state.mana += ritual.reward;
       state.xp += ritual.reward;
       state.totalCasts++;
 
       const oldLevel = state.level;
       state.level = calculateLevel(state.xp);
-
       const newAchievements = checkAchievements();
 
       showSpellEffect(ritual.reward);
-      flashSpellCanvas();
 
       if (state.level > oldLevel) {
         alert(`🎉 Level Up! You are now ${getLevelTitle(state.level)} (Level ${state.level})!`);
       }
 
       alert(`🎊 Ritual Complete! You gained ${ritual.reward} mana!`);
+
       state.ritualProgress[ritualId] = new Array(ritual.steps.length).fill(false);
+
+      save();
     }
 
-    save();
     renderHeader();
     renderRituals();
     renderAchievements();
+    return;
   }
 });
 
-// ================== PARTICLES ==================
+// Open / close book
+function openBook() {
+  const pages = document.getElementById('bookPages');
+  if (pages) {
+    pages.classList.add('open');
+    pages.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  nudgeAmbience();
+}
+
+function closeBook() {
+  const pages = document.getElementById('bookPages');
+  if (pages) pages.classList.remove('open');
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  initSpellCanvas();
+
+  const cover = document.getElementById('bookCover');
+  if (cover) cover.addEventListener('click', openBook);
+
+  const closeButton = document.getElementById('closeBook');
+  if (closeButton) closeButton.addEventListener('click', closeBook);
+
+  // Spell search + filter
+  const searchInput = document.getElementById('spellSearch');
+  const filterButtons = document.querySelectorAll('.spell-library-controls .secondary-button');
+  let currentFilter = 'all';
+  let currentSearch = '';
+
+  if (searchInput) {
+    searchInput.addEventListener('input', () => {
+      currentSearch = searchInput.value || '';
+      renderSpellLibrary(currentFilter, currentSearch);
+    });
+  }
+
+  filterButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      currentFilter = btn.dataset.filter || 'all';
+      renderSpellLibrary(currentFilter, currentSearch);
+    });
+  });
+
+  // Custom spell form
+  const customSpellForm = document.getElementById('customSpellForm');
+  if (customSpellForm) {
+    customSpellForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('customSpellName').value.trim();
+      const desc = document.getElementById('customSpellDesc').value.trim();
+      const reward = parseInt(document.getElementById('customSpellReward').value, 10) || 5;
+      const category = document.getElementById('customSpellCategory').value;
+
+      if (!name || !desc || !category) return;
+
+      const idBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      const id = 'custom_' + idBase + '_' + Date.now().toString(36);
+
+      const newSpell = { id, name, reward, desc, category };
+      if (!SPELLS[category]) SPELLS[category] = [];
+      SPELLS[category].push(newSpell);
+      state.customSpells.push(newSpell);
+
+      save();
+      renderSpellLibrary(currentFilter, currentSearch);
+
+      customSpellForm.reset();
+    });
+  }
+
+  // Custom ritual form
+  const customRitualForm = document.getElementById('customRitualForm');
+  if (customRitualForm) {
+    customRitualForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('customRitualName').value.trim();
+      const reward = parseInt(document.getElementById('customRitualReward').value, 10) || 30;
+      const stepsRaw = document.getElementById('customRitualSteps').value.trim();
+      if (!name || !stepsRaw) return;
+
+      const steps = stepsRaw.split('\n').map(s => s.trim()).filter(Boolean);
+      if (steps.length === 0) return;
+
+      const idBase = name.toLowerCase().replace(/[^a-z0-9]+/g, '_');
+      const id = 'ritual_custom_' + idBase + '_' + Date.now().toString(36);
+
+      const ritual = { id, name, desc: 'Custom ritual', steps, reward };
+      RITUALS.push(ritual);
+      state.customRituals.push(ritual);
+
+      save();
+      renderRituals();
+      customRitualForm.reset();
+    });
+  }
+
+  // Initial particle background
+  createParticles();
+
+  // Load + bootstrap
+  load();
+
+  // Ensure daily for today
+  if (state.lastDay !== today()) {
+    generateDaily();
+    if (state.lastDay && new Date(today()).getTime() - new Date(state.lastDay).getTime() > 86400000 * 1.5) {
+      state.streak = 0;
+    }
+  }
+
+  renderHeader();
+  renderDaily();
+  renderSpellLibrary('all', '');
+  renderAchievements();
+  renderRituals();
+});
+
+// ================= PARTICLES =================
 function createParticles() {
   const container = document.getElementById('particles');
   if (!container) return;
@@ -706,45 +752,3 @@ function createParticles() {
     container.appendChild(particle);
   }
 }
-
-// ================== INIT ==================
-function init() {
-  load();
-
-  // daily logic
-  if (state.lastDay !== today()) {
-    generateDaily();
-    if (
-      state.lastDay &&
-      new Date(today()).getTime() - new Date(state.lastDay).getTime() > 86400000 * 1.5
-    ) {
-      state.streak = 0;
-    }
-  }
-
-  renderHeader();
-  renderDaily();
-  renderSpellCategory('body', 'bodySpells');
-  renderSpellCategory('mind', 'mindSpells');
-  renderSpellCategory('spirit', 'spiritSpells');
-  renderSpellCategory('environment', 'environmentSpells');
-  renderAchievements();
-  renderRituals();
-  setupCustomForms();
-  setupSpellSearch();
-  setupDockClick();
-  setupTabs();
-  createParticles();
-
-  // layout orbit initially + on resize
-  layoutOrbitSpells();
-  window.addEventListener('resize', layoutOrbitSpells);
-
-  // book mode?
-  const params = getUrlParams();
-  if (params.mode === 'book') {
-    enterBookMode();
-  }
-}
-
-document.addEventListener('DOMContentLoaded', init);

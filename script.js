@@ -1,3 +1,4 @@
+// ===================== DATA =====================
 
 const SPELLS = {
   body: [
@@ -36,7 +37,7 @@ const SPELLS = {
   ]
 };
 
-const RITUALS_BASE = [
+const RITUALS = [
   {
     id:'morning',
     name:'Dawn Awakening Ritual',
@@ -61,16 +62,18 @@ const RITUALS_BASE = [
 ];
 
 const ACHIEVEMENTS = [
-  {id:'first_cast',name:'First Spell',desc:'Cast your first spell',icon:'✨',unlocked:false},
-  {id:'streak_3',name:'Dedicated',desc:'3 day streak',icon:'🔥',unlocked:false},
-  {id:'streak_7',name:'Committed',desc:'7 day streak',icon:'⚡',unlocked:false},
-  {id:'streak_30',name:'Master',desc:'30 day streak',icon:'👑',unlocked:false},
-  {id:'casts_10',name:'Apprentice',desc:'Cast 10 spells',icon:'🎓',unlocked:false},
-  {id:'casts_50',name:'Adept',desc:'Cast 50 spells',icon:'🔮',unlocked:false},
-  {id:'casts_100',name:'Wizard',desc:'Cast 100 spells',icon:'🧙',unlocked:false},
-  {id:'all_categories',name:'Versatile',desc:'Cast spells from all categories',icon:'🌟',unlocked:false},
-  {id:'ritual_complete',name:'Ritualist',desc:'Complete your first ritual',icon:'🕯️',unlocked:false}
+  {id:'first_cast',name:'First Spell',desc:'Cast your first spell',icon:'✨'},
+  {id:'streak_3',name:'Dedicated',desc:'3 day streak',icon:'🔥'},
+  {id:'streak_7',name:'Committed',desc:'7 day streak',icon:'⚡'},
+  {id:'streak_30',name:'Master',desc:'30 day streak',icon:'👑'},
+  {id:'casts_10',name:'Apprentice',desc:'Cast 10 spells',icon:'🎓'},
+  {id:'casts_50',name:'Adept',desc:'Cast 50 spells',icon:'🔮'},
+  {id:'casts_100',name:'Wizard',desc:'Cast 100 spells',icon:'🧙'},
+  {id:'all_categories',name:'Versatile',desc:'Cast spells from all categories',icon:'🌟'},
+  {id:'ritual_complete',name:'Ritualist',desc:'Complete your first ritual',icon:'🕯️'}
 ];
+
+// ===================== STATE =====================
 
 let state = {
   mana: 0,
@@ -83,34 +86,13 @@ let state = {
   xp: 0,
   ritualProgress: {},
   categoriesCast: [],
-  favorites: [],
   customSpells: [],
   customRituals: []
 };
 
-/* === Helpers for combined data === */
+let ambienceAudio = null;
 
-function getAllSpells() {
-  return [
-    ...SPELLS.body,
-    ...SPELLS.mind,
-    ...SPELLS.spirit,
-    ...SPELLS.environment,
-    ...state.customSpells
-  ];
-}
-
-function getSpellsByCategory(category) {
-  const base = SPELLS[category] || [];
-  const custom = state.customSpells.filter(s => s.category === category);
-  return [...base, ...custom];
-}
-
-function getAllRituals() {
-  return [...RITUALS_BASE, ...state.customRituals];
-}
-
-/* === Utility === */
+// ===================== HELPERS =====================
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -121,18 +103,22 @@ function save() {
 }
 
 function load() {
-  let s = localStorage.getItem('grimoireOS');
+  const s = localStorage.getItem('grimoireOS');
   if (s) {
-    state = JSON.parse(s);
-    if (!state.achievements) state.achievements = [];
-    if (!state.level) state.level = 1;
-    if (!state.xp) state.xp = 0;
-    if (!state.ritualProgress) state.ritualProgress = {};
-    if (!state.categoriesCast) state.categoriesCast = [];
-    if (!state.favorites) state.favorites = [];
-    if (!state.customSpells) state.customSpells = [];
-    if (!state.customRituals) state.customRituals = [];
+    try {
+      const parsed = JSON.parse(s);
+      state = Object.assign(state, parsed);
+    } catch (e) {
+      console.warn('Failed to load state, resetting.', e);
+    }
   }
+  if (!state.achievements) state.achievements = [];
+  if (!state.level) state.level = 1;
+  if (!state.xp) state.xp = 0;
+  if (!state.ritualProgress) state.ritualProgress = {};
+  if (!state.categoriesCast) state.categoriesCast = [];
+  if (!state.customSpells) state.customSpells = [];
+  if (!state.customRituals) state.customRituals = [];
 }
 
 function calculateLevel(xp) {
@@ -148,17 +134,30 @@ function getLevelTitle(level) {
   return 'Grand Sorcerer';
 }
 
-/* === Achievements === */
+function getAllSpells() {
+  const base = [
+    ...SPELLS.body,
+    ...SPELLS.mind,
+    ...SPELLS.spirit,
+    ...SPELLS.environment
+  ];
+  return base.concat(state.customSpells || []);
+}
+
+function getAllRituals() {
+  return RITUALS.concat(state.customRituals || []);
+}
+
+// ===================== ACHIEVEMENTS =====================
 
 function checkAchievements() {
-  let newUnlocks = [];
-  
+  const newUnlocks = [];
+
   ACHIEVEMENTS.forEach(ach => {
     if (state.achievements.includes(ach.id)) return;
-    
     let unlock = false;
-    
-    switch(ach.id) {
+
+    switch (ach.id) {
       case 'first_cast': unlock = state.totalCasts >= 1; break;
       case 'streak_3': unlock = state.streak >= 3; break;
       case 'streak_7': unlock = state.streak >= 7; break;
@@ -167,318 +166,250 @@ function checkAchievements() {
       case 'casts_50': unlock = state.totalCasts >= 50; break;
       case 'casts_100': unlock = state.totalCasts >= 100; break;
       case 'all_categories': unlock = state.categoriesCast.length >= 4; break;
-      case 'ritual_complete': 
-        unlock = Object.values(state.ritualProgress).some(steps => 
-          steps.filter(s => s).length === steps.length
+      case 'ritual_complete':
+        unlock = Object.values(state.ritualProgress).some(steps =>
+          steps && steps.filter(s => s).length === steps.length
         );
         break;
     }
-    
+
     if (unlock) {
       state.achievements.push(ach.id);
       newUnlocks.push(ach);
     }
   });
-  
+
   return newUnlocks;
 }
 
-/* === Spell-cast UI effect (popup + canvas) === */
-
-let spellCanvas = null;
-let spellCtx = null;
-let spellParticles = [];
-let spellAnimating = false;
-
-function initSpellCanvas() {
-  spellCanvas = document.getElementById('spellCanvas');
-  if (!spellCanvas) return;
-  spellCtx = spellCanvas.getContext('2d');
-  resizeSpellCanvas();
-  window.addEventListener('resize', resizeSpellCanvas);
-}
-
-function resizeSpellCanvas() {
-  if (!spellCanvas || !spellCtx) return;
-  spellCanvas.width = window.innerWidth;
-  spellCanvas.height = window.innerHeight;
-}
-
-function triggerSpellCanvas(mana) {
-  if (!spellCanvas || !spellCtx) return;
-
-  const count = 30 + Math.min(40, Math.floor(mana / 2));
-  const centerX = window.innerWidth / 2;
-  const centerY = window.innerHeight / 2;
-
-  for (let i = 0; i < count; i++) {
-    const angle = Math.random() * Math.PI * 2;
-    const speed = 2 + Math.random() * 3;
-    const isGold = Math.random() < 0.5;
-    spellParticles.push({
-      x: centerX,
-      y: centerY,
-      vx: Math.cos(angle) * speed,
-      vy: Math.sin(angle) * speed,
-      life: 0,
-      maxLife: 40 + Math.random() * 20,
-      radius: 2 + Math.random() * 3,
-      type: isGold ? 'gold' : 'arcane'
-    });
-  }
-
-  if (!spellAnimating) {
-    spellAnimating = true;
-    spellCanvas.classList.add('active');
-    requestAnimationFrame(animateSpellCanvas);
-  }
-}
-
-function animateSpellCanvas() {
-  if (!spellCanvas || !spellCtx) return;
-
-  spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
-
-  spellParticles.forEach(p => {
-    p.x += p.vx;
-    p.y += p.vy;
-    p.life++;
-  });
-
-  spellParticles = spellParticles.filter(p => p.life < p.maxLife);
-
-  spellParticles.forEach(p => {
-    const alpha = 1 - p.life / p.maxLife;
-    spellCtx.beginPath();
-    spellCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
-    if (p.type === 'gold') {
-      spellCtx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
-    } else {
-      spellCtx.fillStyle = `rgba(138, 43, 226, ${alpha})`;
-    }
-    spellCtx.fill();
-  });
-
-  if (spellParticles.length > 0) {
-    requestAnimationFrame(animateSpellCanvas);
-  } else {
-    spellAnimating = false;
-    spellCanvas.classList.remove('active');
-    spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
-  }
-}
+// ===================== VISUAL EFFECTS =====================
 
 function showSpellEffect(mana) {
   const effect = document.getElementById('spellEffect');
   const manaText = document.getElementById('effectMana');
-  
-  manaText.textContent = mana;
-  effect.classList.add('active');
-  triggerSpellCanvas(mana);
-  
-  setTimeout(() => {
-    effect.classList.remove('active');
-  }, 600);
+
+  if (manaText) {
+    manaText.textContent = mana;
+  }
+  if (effect) {
+    effect.classList.add('active');
+    setTimeout(() => effect.classList.remove('active'), 600);
+  }
+
+  runCanvasSpellEffect();
 }
 
-/* === COSMIC BACKGROUND STARFIELD === */
-let cosmicCanvas, cosmicCtx, cosmicStars = [];
+function runCanvasSpellEffect() {
+  const canvas = document.getElementById('spellCanvas');
+  if (!canvas) return;
 
-function initCosmicBackground() {
-  cosmicCanvas = document.getElementById('cosmicCanvas');
-  if (!cosmicCanvas) return;
-  cosmicCtx = cosmicCanvas.getContext('2d');
-  resizeCosmicCanvas();
-  window.addEventListener('resize', resizeCosmicCanvas);
+  const ctx = canvas.getContext('2d');
+  const w = canvas.width = window.innerWidth;
+  const h = canvas.height = window.innerHeight;
 
-  const starCount = 80;
-  cosmicStars = [];
-  for (let i = 0; i < starCount; i++) {
-    cosmicStars.push({
-      x: Math.random(),
-      y: Math.random(),
-      r: 0.5 + Math.random() * 1.2,
-      tw: Math.random() * Math.PI * 2,
-      speed: 0.005 + Math.random() * 0.01
+  const particles = [];
+  const count = 80;
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 3;
+    particles.push({
+      x: w / 2,
+      y: h / 2,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0,
+      maxLife: 30 + Math.random() * 20
     });
   }
 
-  requestAnimationFrame(drawCosmicBackground);
+  canvas.classList.add('active');
+
+  function tick() {
+    ctx.clearRect(0, 0, w, h);
+    ctx.fillStyle = 'rgba(5, 2, 15, 0.25)';
+    ctx.fillRect(0, 0, w, h);
+
+    let alive = false;
+    particles.forEach(p => {
+      p.x += p.vx;
+      p.y += p.vy;
+      p.life++;
+      const t = p.life / p.maxLife;
+      if (t < 1) alive = true;
+      const alpha = Math.max(0, 1 - t);
+      const radius = 2 + 4 * (1 - t);
+      ctx.beginPath();
+      ctx.fillStyle = `rgba(255,215,0,${alpha})`;
+      ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+      ctx.fill();
+    });
+
+    if (alive) {
+      requestAnimationFrame(tick);
+    } else {
+      canvas.classList.remove('active');
+      ctx.clearRect(0, 0, w, h);
+    }
+  }
+
+  tick();
 }
 
-function resizeCosmicCanvas() {
-  if (!cosmicCanvas) return;
-  cosmicCanvas.width = window.innerWidth;
-  cosmicCanvas.height = window.innerHeight;
-}
-
-function drawCosmicBackground() {
-  if (!cosmicCtx || !cosmicCanvas) return;
-
-  const w = cosmicCanvas.width;
-  const h = cosmicCanvas.height;
-
-  cosmicCtx.clearRect(0, 0, w, h);
-
-  const g = cosmicCtx.createRadialGradient(
-    w * 0.5, h * 0.1, 0,
-    w * 0.5, h * 0.4, h * 0.8
-  );
-  g.addColorStop(0, 'rgba(180, 120, 255, 0.18)');
-  g.addColorStop(0.4, 'rgba(60, 20, 90, 0.5)');
-  g.addColorStop(1, 'rgba(2, 0, 10, 0.9)');
-  cosmicCtx.fillStyle = g;
-  cosmicCtx.fillRect(0, 0, w, h);
-
-  cosmicStars.forEach(s => {
-    s.tw += s.speed;
-    const alpha = 0.3 + 0.7 * (0.5 + Math.sin(s.tw) * 0.5);
-    const x = s.x * w;
-    const y = s.y * h;
-
-    cosmicCtx.beginPath();
-    cosmicCtx.arc(x, y, s.r, 0, Math.PI * 2);
-    cosmicCtx.fillStyle = `rgba(255, 230, 190, ${alpha})`;
-    cosmicCtx.fill();
-  });
-
-  requestAnimationFrame(drawCosmicBackground);
-}
-
-/* === SUBTLE AMBIENT AUDIO (JS GENERATED) === */
-let audioCtx = null;
-let ambienceStarted = false;
-
+// simple ambience hook – expects ambience.mp3 if you add it
 function startAmbience() {
-  if (ambienceStarted) return;
-  ambienceStarted = true;
-
+  if (ambienceAudio) return;
   try {
-    const AudioContext = window.AudioContext || window.webkitAudioContext;
-    audioCtx = new AudioContext();
-
-    const osc1 = audioCtx.createOscillator();
-    const osc2 = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-
-    osc1.type = 'sine';
-    osc2.type = 'sine';
-
-    osc1.frequency.value = 140;
-    osc2.frequency.value = 142;
-
-    const lfo = audioCtx.createOscillator();
-    const lfoGain = audioCtx.createGain();
-    lfo.frequency.value = 0.08;
-    lfoGain.gain.value = 6;
-    lfo.connect(lfoGain);
-    lfoGain.connect(osc1.frequency);
-
-    gain.gain.value = 0.08;
-
-    osc1.connect(gain);
-    osc2.connect(gain);
-    gain.connect(audioCtx.destination);
-
-    osc1.start();
-    osc2.start();
-    lfo.start();
+    ambienceAudio = new Audio('ambience.mp3');
+    ambienceAudio.loop = true;
+    ambienceAudio.volume = 0.18;
+    ambienceAudio.play().catch(() => {
+      // user may need to interact again; ignore
+    });
   } catch (e) {
-    console.warn('Audio init failed:', e);
+    console.warn('Ambience unavailable', e);
   }
 }
 
-/* === State init === */
-
-load();
-
-function generateDaily() {
-  const allSpells = getAllSpells();
-  if (allSpells.length === 0) return;
-  state.daily = allSpells
-    .slice()
-    .sort(() => 0.5 - Math.random())
-    .slice(0, 5)
-    .map(s => s.id);
-  state.lastDay = today();
-  save();
-}
-
-if (state.lastDay !== today()) {
-  generateDaily();
-  if (state.lastDay && new Date(today()).getTime() - new Date(state.lastDay).getTime() > 86400000 * 1.5) {
-    state.streak = 0;
-  }
-}
-
-/* === Render functions === */
+// ===================== RENDERING =====================
 
 function renderHeader() {
-  document.getElementById('manaDisplay').textContent = state.mana;
-  document.getElementById('totalCasts').textContent = state.totalCasts;
-  document.getElementById('streak').textContent = state.streak;
-  document.getElementById('level').textContent = state.level;
-  document.getElementById('levelDisplay').textContent = getLevelTitle(state.level);
-  
+  const manaEls = [
+    document.getElementById('manaDisplay'),
+    document.getElementById('manaDisplayTop')
+  ];
+  manaEls.forEach(el => {
+    if (el) el.textContent = state.mana;
+  });
+
+  const totalCastsEl = document.getElementById('totalCasts');
+  if (totalCastsEl) totalCastsEl.textContent = state.totalCasts;
+
+  const streakEl = document.getElementById('streak');
+  if (streakEl) streakEl.textContent = state.streak;
+
+  const levelEl = document.getElementById('level');
+  if (levelEl) levelEl.textContent = state.level;
+
+  const title = getLevelTitle(state.level);
+  const levelTitleEls = [
+    document.getElementById('levelDisplay'),
+    document.getElementById('levelDisplayTop')
+  ];
+  levelTitleEls.forEach(el => {
+    if (el) el.textContent = title;
+  });
+
+  const xpNeeded = state.level * 100;
   const xpProgress = state.xp % 100;
-  const xpPercent = (xpProgress / 100) * 100;
-  
-  document.getElementById('xpFill').style.width = xpPercent + '%';
-  document.getElementById('xpText').textContent = xpProgress + ' / 100 XP';
+  const xpPercent = Math.max(0, Math.min(100, (xpProgress / 100) * 100));
+
+  const xpFill = document.getElementById('xpFill');
+  const xpText = document.getElementById('xpText');
+  if (xpFill) xpFill.style.width = xpPercent + '%';
+  if (xpText) xpText.textContent = xpProgress + ' / 100 XP';
 }
 
 function renderDaily() {
   const ul = document.getElementById('dailyList');
-  ul.innerHTML = '';
-  
+  const floatContainer = document.getElementById('floatingDailyContainer');
+  if (ul) ul.innerHTML = '';
+  if (floatContainer) floatContainer.innerHTML = '';
+
   const allSpells = getAllSpells();
-  
+
   state.daily.forEach(id => {
     const sp = allSpells.find(s => s.id === id);
     if (!sp) return;
-    
-    const li = document.createElement('li');
-    li.innerHTML = `
-      <span class="spell-name">${sp.name}</span>
-      <div class="spell-desc">${sp.desc}</div>
-      <span class="spell-reward">+${sp.reward} ✨ Mana</span>
-      <button class="cast-button" data-cast="${id}">⚡ Cast Spell</button>
-    `;
-    ul.appendChild(li);
+
+    if (ul) {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="spell-name">${sp.name}</span>
+        <div class="spell-desc">${sp.desc}</div>
+        <span class="spell-reward">+${sp.reward} ✨ Mana</span>
+        <button class="cast-button" data-cast="${sp.id}">⚡ Cast Spell</button>
+      `;
+      ul.appendChild(li);
+    }
+
+    if (floatContainer) {
+      const card = document.createElement('div');
+      card.className = 'floating-daily-card';
+      card.innerHTML = `
+        <div class="floating-daily-name">${sp.name}</div>
+        <div class="floating-daily-reward">+${sp.reward} ✨</div>
+        <button class="floating-daily-cast" data-cast="${sp.id}">Cast</button>
+      `;
+      floatContainer.appendChild(card);
+    }
+  });
+
+  layoutFloatingSpells();
+}
+
+function layoutFloatingSpells() {
+  const container = document.getElementById('floatingDailyContainer');
+  if (!container) return;
+  const cards = Array.from(container.children);
+  const count = cards.length;
+  if (!count) return;
+
+  const radius = 110;
+
+  cards.forEach((card, idx) => {
+    const angle = (idx / count) * Math.PI * 2 - Math.PI / 2;
+    const x = Math.cos(angle) * radius;
+    const y = Math.sin(angle) * radius;
+
+    card.style.transform =
+      `translate(-50%, -50%) translate(${x}px, ${y}px)`;
   });
 }
 
 function renderSpellCategory(category, elementId) {
   const ul = document.getElementById(elementId);
+  if (!ul) return;
   ul.innerHTML = '';
-  
-  const spells = getSpellsByCategory(category);
-  spells.forEach(sp => {
-    const li = document.createElement('li');
-    const isFav = state.favorites.includes(sp.id);
-    li.innerHTML = `
-      <span class="spell-name">${sp.name}</span>
-      <div class="spell-desc">${sp.desc}</div>
-      <span class="spell-reward">+${sp.reward} ✨ Mana</span>
-      <div class="spell-actions">
-        <button class="cast-button small" data-cast="${sp.id}">⚡ Quick Cast</button>
-        <button class="secondary-button small" data-add-daily="${sp.id}">➕ Add to Daily</button>
-        <button class="icon-button favorite-button ${isFav ? 'active' : ''}" data-fav="${sp.id}">
-          ${isFav ? '★ Favourited' : '☆ Favourite'}
-        </button>
-      </div>
-    `;
-    ul.appendChild(li);
-  });
+
+  const queryEl = document.getElementById('spellSearch');
+  const q = queryEl ? queryEl.value.trim().toLowerCase() : '';
+
+  const spells = getAllSpells().filter(s => s.category === category);
+
+  spells
+    .filter(sp => {
+      if (!q) return true;
+      return sp.name.toLowerCase().includes(q) ||
+             sp.desc.toLowerCase().includes(q);
+    })
+    .forEach(sp => {
+      const li = document.createElement('li');
+      li.innerHTML = `
+        <span class="spell-name">${sp.name}</span>
+        <div class="spell-desc">${sp.desc}</div>
+        <span class="spell-reward">+${sp.reward} ✨ Mana</span>
+      `;
+      ul.appendChild(li);
+    });
+}
+
+function renderAllSpellCategories() {
+  renderSpellCategory('body', 'bodySpells');
+  renderSpellCategory('mind', 'mindSpells');
+  renderSpellCategory('spirit', 'spiritSpells');
+  renderSpellCategory('environment', 'environmentSpells');
 }
 
 function renderAchievements() {
   const grid = document.getElementById('achievementsList');
+  if (!grid) return;
   grid.innerHTML = '';
-  
+
   ACHIEVEMENTS.forEach(ach => {
     const div = document.createElement('div');
-    div.className = 'achievement' + (state.achievements.includes(ach.id) ? '' : ' locked');
+    div.className =
+      'achievement' + (state.achievements.includes(ach.id) ? '' : ' locked');
     div.innerHTML = `
       <div class="achievement-icon">${ach.icon}</div>
       <div class="achievement-name">${ach.name}</div>
@@ -490,277 +421,240 @@ function renderAchievements() {
 
 function renderRituals() {
   const ul = document.getElementById('ritualsList');
+  if (!ul) return;
   ul.innerHTML = '';
-  
+
   const rituals = getAllRituals();
+
   rituals.forEach(ritual => {
-    const li = document.createElement('li');
-    li.className = 'ritual-item';
-    
     if (!state.ritualProgress[ritual.id]) {
-      state.ritualProgress[ritual.id] = new Array(ritual.steps.length).fill(false);
+      state.ritualProgress[ritual.id] =
+        new Array(ritual.steps.length).fill(false);
     }
-    
+
     const progress = state.ritualProgress[ritual.id];
     const completed = progress.filter(s => s).length;
     const total = ritual.steps.length;
-    
+
+    const li = document.createElement('li');
+    li.className = 'ritual-item';
+
     let stepsHtml = '<ul class="ritual-steps">';
     ritual.steps.forEach((step, idx) => {
       stepsHtml += `
-        <li class="ritual-step ${progress[idx] ? 'completed' : ''}" data-ritual="${ritual.id}" data-step="${idx}">
+        <li class="ritual-step ${progress[idx] ? 'completed' : ''}"
+            data-ritual="${ritual.id}" data-step="${idx}">
           ${progress[idx] ? '✓' : '○'} ${step}
         </li>
       `;
     });
     stepsHtml += '</ul>';
-    
+
     li.innerHTML = `
       <div class="ritual-title">${ritual.name}</div>
       <div class="ritual-desc">${ritual.desc}</div>
-      <div style="margin: 10px 0; font-weight: bold; color: #6a0dad;">Progress: ${completed}/${total}</div>
+      <div style="margin: 10px 0; font-weight: bold; color: #6a0dad;">
+        Progress: ${completed}/${total}
+      </div>
       ${stepsHtml}
       <span class="spell-reward">Complete for +${ritual.reward} ✨ Mana</span>
     `;
-    
+
     ul.appendChild(li);
   });
 }
 
-/* === Spell search === */
+// ===================== DAILY GENERATION =====================
 
-function filterSpellLibrary(term) {
-  const query = term.trim().toLowerCase();
-  const items = document.querySelectorAll('#spells .spell-list li');
-  items.forEach(li => {
-    if (!query) {
-      li.style.display = '';
-      return;
-    }
-    const text = li.textContent.toLowerCase();
-    li.style.display = text.includes(query) ? '' : 'none';
-  });
+function generateDaily() {
+  const allSpells = getAllSpells();
+  if (!allSpells.length) return;
+  state.daily = allSpells
+    .slice()
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 5)
+    .map(s => s.id);
+  state.lastDay = today();
+  save();
 }
 
-function initSpellSearch() {
-  const input = document.getElementById('spellSearch');
-  const clearBtn = document.getElementById('clearSearch');
-  if (!input) return;
+function updateStreakOnCast() {
+  const t = today();
 
-  input.addEventListener('input', () => {
-    filterSpellLibrary(input.value);
-  });
+  if (state.lastDay === t) {
+    // streak unchanged for same day
+  } else if (state.lastDay) {
+    const daysDiff =
+      (new Date(t).getTime() - new Date(state.lastDay).getTime()) / 86400000;
+    if (daysDiff <= 1.5) {
+      state.streak++;
+    } else {
+      state.streak = 1;
+    }
+  } else {
+    state.streak = 1;
+  }
 
-  if (clearBtn) {
-    clearBtn.addEventListener('click', () => {
-      input.value = '';
-      filterSpellLibrary('');
+  state.lastDay = t;
+}
+
+// ===================== BOOK OPEN/CLOSE =====================
+
+function openBook() {
+  const pages = document.getElementById('bookPages');
+  if (!pages) return;
+  pages.classList.add('open');
+  startAmbience();
+}
+
+function closeBook() {
+  const pages = document.getElementById('bookPages');
+  if (!pages) return;
+  pages.classList.remove('open');
+}
+
+// ===================== CUSTOM SPELLS & RITUALS =====================
+
+function setupCustomSpellUI() {
+  const toggleBtn = document.getElementById('toggleCustomSpell');
+  const card = document.getElementById('customSpellCard');
+  const saveBtn = document.getElementById('saveCustomSpell');
+  const nameEl = document.getElementById('customSpellName');
+  const descEl = document.getElementById('customSpellDesc');
+  const catEl = document.getElementById('customSpellCategory');
+  const rewardEl = document.getElementById('customSpellReward');
+
+  if (toggleBtn && card) {
+    toggleBtn.addEventListener('click', () => {
+      card.classList.toggle('hidden');
     });
   }
-}
 
-/* === Custom spell & ritual forms === */
-
-function toggleElement(id) {
-  const el = document.getElementById(id);
-  if (!el) return;
-  el.classList.toggle('hidden');
-}
-
-function initCustomSpellForm() {
-  const toggleBtn = document.getElementById('toggleCustomSpell');
-  const saveBtn = document.getElementById('saveCustomSpell');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => toggleElement('customSpellCard'));
-  }
   if (saveBtn) {
     saveBtn.addEventListener('click', () => {
-      const nameEl = document.getElementById('customSpellName');
-      const descEl = document.getElementById('customSpellDesc');
-      const rewardEl = document.getElementById('customSpellReward');
-      const categoryEl = document.getElementById('customSpellCategory');
+      const name = (nameEl.value || '').trim();
+      const desc = (descEl.value || '').trim();
+      const category = catEl.value || 'body';
+      let reward = parseInt(rewardEl.value, 10);
+      if (!Number.isFinite(reward) || reward < 1) reward = 5;
+      if (reward > 50) reward = 50;
 
-      const name = nameEl.value.trim();
-      const desc = descEl.value.trim();
-      const reward = Math.max(1, Math.min(50, parseInt(rewardEl.value || '8', 10)));
-      const category = categoryEl.value;
-
-      if (!name || !desc || !category) {
-        alert('Please fill in name, description, and category for your spell.');
+      if (!name || !desc) {
+        alert('Please give your spell a name and description.');
         return;
       }
 
-      const id = 'cspell_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-
-      state.customSpells.push({
-        id,
-        name,
-        desc,
-        reward,
-        category
-      });
-
+      const id = 'custom_spell_' + Date.now();
+      state.customSpells.push({id, name, desc, reward, category});
       save();
-      renderSpellCategory('body', 'bodySpells');
-      renderSpellCategory('mind', 'mindSpells');
-      renderSpellCategory('spirit', 'spiritSpells');
-      renderSpellCategory('environment', 'environmentSpells');
 
       nameEl.value = '';
       descEl.value = '';
       rewardEl.value = '8';
-      categoryEl.value = 'body';
+      card.classList.add('hidden');
 
-      alert('✨ Custom spell added to your Tome!');
+      renderAllSpellCategories();
+      renderDaily();
     });
   }
 }
 
-function initCustomRitualForm() {
+function setupCustomRitualUI() {
   const toggleBtn = document.getElementById('toggleCustomRitual');
+  const card = document.getElementById('customRitualCard');
   const saveBtn = document.getElementById('saveCustomRitual');
-  if (toggleBtn) {
-    toggleBtn.addEventListener('click', () => toggleElement('customRitualCard'));
+  const nameEl = document.getElementById('customRitualName');
+  const descEl = document.getElementById('customRitualDesc');
+  const stepsEl = document.getElementById('customRitualSteps');
+  const rewardEl = document.getElementById('customRitualReward');
+
+  if (toggleBtn && card) {
+    toggleBtn.addEventListener('click', () => {
+      card.classList.toggle('hidden');
+    });
   }
+
   if (saveBtn) {
     saveBtn.addEventListener('click', () => {
-      const nameEl = document.getElementById('customRitualName');
-      const descEl = document.getElementById('customRitualDesc');
-      const stepsEl = document.getElementById('customRitualSteps');
-      const rewardEl = document.getElementById('customRitualReward');
-
-      const name = nameEl.value.trim();
-      const desc = descEl.value.trim();
-      const reward = Math.max(5, Math.min(100, parseInt(rewardEl.value || '35', 10)));
-
-      const steps = stepsEl.value
+      const name = (nameEl.value || '').trim();
+      const desc = (descEl.value || '').trim();
+      const steps = (stepsEl.value || '')
         .split('\n')
         .map(s => s.trim())
-        .filter(s => s.length > 0);
+        .filter(Boolean);
+      let reward = parseInt(rewardEl.value, 10);
+      if (!Number.isFinite(reward) || reward < 5) reward = 20;
+      if (reward > 100) reward = 100;
 
-      if (!name || !desc || steps.length === 0) {
-        alert('Please add a name, description, and at least one step for your ritual.');
+      if (!name || !steps.length) {
+        alert('Please give your ritual a name and at least one step.');
         return;
       }
 
-      const id = 'crit_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
-
-      state.customRituals.push({
-        id,
-        name,
-        desc,
-        steps,
-        reward
-      });
-
+      const id = 'custom_ritual_' + Date.now();
+      state.customRituals.push({id, name, desc, steps, reward});
       save();
-      renderRituals();
 
       nameEl.value = '';
       descEl.value = '';
       stepsEl.value = '';
-      rewardEl.value = '35';
+      rewardEl.value = '30';
+      card.classList.add('hidden');
 
-      alert('🕯️ Custom ritual added to your Tome!');
+      renderRituals();
+      renderAchievements();
     });
   }
 }
 
-/* === Global click handlers === */
+// ===================== EVENTS =====================
 
 document.addEventListener('click', e => {
-  // Spell cast (daily + library quick cast)
-  if (e.target.dataset.cast) {
-    const id = e.target.dataset.cast;
+  // Casting spells (daily list & floating)
+  const castId = e.target.dataset.cast;
+  if (castId) {
     const allSpells = getAllSpells();
-    const sp = allSpells.find(s => s.id === id);
-    
+    const sp = allSpells.find(s => s.id === castId);
     if (!sp) return;
-    
+
     state.mana += sp.reward;
     state.xp += sp.reward;
     state.totalCasts++;
-    
+
     if (!state.categoriesCast.includes(sp.category)) {
       state.categoriesCast.push(sp.category);
     }
-    
-    if (state.lastDay === today()) {
-      // same day, streak continues
-    } else if (state.lastDay) {
-      const daysDiff = (new Date(today()).getTime() - new Date(state.lastDay).getTime()) / 86400000;
-      if (daysDiff <= 1.5) {
-        state.streak++;
-      } else {
-        state.streak = 1;
-      }
-    } else {
-      state.streak = 1;
-    }
-    
-    state.lastDay = today();
-    
+
+    updateStreakOnCast();
+
     const oldLevel = state.level;
     state.level = calculateLevel(state.xp);
-    
     const newAchievements = checkAchievements();
-    
+
     save();
     renderHeader();
     renderAchievements();
     showSpellEffect(sp.reward);
-    
+
     if (state.level > oldLevel) {
       alert(`🎉 Level Up! You are now ${getLevelTitle(state.level)} (Level ${state.level})!`);
     }
-    
+
     if (newAchievements.length > 0) {
       newAchievements.forEach(ach => {
         setTimeout(() => {
           alert(`🏆 Achievement Unlocked: ${ach.name} - ${ach.desc}`);
-        }, 100);
+        }, 150);
       });
     }
   }
-  
-  // Generate new daily spread
+
+  // New spread
   if (e.target.id === 'newSpread') {
     generateDaily();
     renderDaily();
   }
 
-  // Add a library spell into today's daily list
-  if (e.target.dataset.addDaily) {
-    const id = e.target.dataset.addDaily;
-    if (!state.daily.includes(id)) {
-      state.daily.push(id);
-    }
-    state.daily = [...new Set(state.daily)];
-    state.lastDay = today();
-    save();
-    renderDaily();
-
-    e.target.textContent = 'Added to Daily';
-    e.target.classList.add('disabled');
-    e.target.disabled = true;
-  }
-
-  // Toggle favourites
-  if (e.target.dataset.fav) {
-    const id = e.target.dataset.fav;
-    const idx = state.favorites.indexOf(id);
-    if (idx === -1) {
-      state.favorites.push(id);
-      e.target.classList.add('active');
-      e.target.textContent = '★ Favourited';
-    } else {
-      state.favorites.splice(idx, 1);
-      e.target.classList.remove('active');
-      e.target.textContent = '☆ Favourite';
-    }
-    save();
-  }
-  
   // Tab switching
   const tabButton = e.target.closest('.spell-tab');
   if (tabButton) {
@@ -774,41 +668,41 @@ document.addEventListener('click', e => {
     const view = document.getElementById(tabId);
     if (view) view.classList.add('active');
   }
-  
-  // Ritual step toggle
+
+  // Ritual step toggling
   if (e.target.classList.contains('ritual-step')) {
     const ritualId = e.target.dataset.ritual;
     const stepIdx = parseInt(e.target.dataset.step, 10);
-    
-    state.ritualProgress[ritualId][stepIdx] = !state.ritualProgress[ritualId][stepIdx];
-    
+    if (!ritualId || Number.isNaN(stepIdx)) return;
+
+    state.ritualProgress[ritualId][stepIdx] =
+      !state.ritualProgress[ritualId][stepIdx];
+
     const rituals = getAllRituals();
     const ritual = rituals.find(r => r.id === ritualId);
-    if (!ritual) return;
-
     const allComplete = state.ritualProgress[ritualId].every(s => s);
-    
-    if (allComplete) {
+
+    if (ritual && allComplete) {
       state.mana += ritual.reward;
       state.xp += ritual.reward;
       state.totalCasts++;
-      
+
       const oldLevel = state.level;
       state.level = calculateLevel(state.xp);
-      
+
       const newAchievements = checkAchievements();
-      
+
       showSpellEffect(ritual.reward);
-      
+      alert(`🎊 Ritual Complete! You gained ${ritual.reward} mana!`);
+
       if (state.level > oldLevel) {
         alert(`🎉 Level Up! You are now ${getLevelTitle(state.level)} (Level ${state.level})!`);
       }
-      
-      alert(`🎊 Ritual Complete! You gained ${ritual.reward} mana!`);
-      
-      state.ritualProgress[ritualId] = new Array(ritual.steps.length).fill(false);
+
+      state.ritualProgress[ritualId] =
+        new Array(ritual.steps.length).fill(false);
     }
-    
+
     save();
     renderHeader();
     renderRituals();
@@ -816,48 +710,68 @@ document.addEventListener('click', e => {
   }
 });
 
-/* === Book opening === */
-
-function openBook() {
+// Book open/close
+document.addEventListener('DOMContentLoaded', () => {
   const cover = document.getElementById('bookCover');
-  const pages = document.getElementById('bookPages');
-  
-  cover.classList.add('open');
-  startAmbience();
-  setTimeout(() => {
-    cover.style.display = 'none';
-    pages.classList.add('open');
-  }, 600);
-}
+  const closeBtn = document.getElementById('closeBook');
 
-document.getElementById('bookCover').addEventListener('click', openBook);
+  if (cover) cover.addEventListener('click', openBook);
+  if (closeBtn) closeBtn.addEventListener('click', closeBook);
+});
 
-/* === Background particles === */
+// Spell search
+document.addEventListener('DOMContentLoaded', () => {
+  const search = document.getElementById('spellSearch');
+  const clearBtn = document.getElementById('clearSpellSearch');
+
+  if (search) {
+    search.addEventListener('input', () => {
+      renderAllSpellCategories();
+    });
+  }
+
+  if (clearBtn && search) {
+    clearBtn.addEventListener('click', () => {
+      search.value = '';
+      renderAllSpellCategories();
+    });
+  }
+});
+
+// ===================== PARTICLES =====================
 
 function createParticles() {
   const container = document.getElementById('particles');
-  for (let i = 0; i < 20; i++) {
-    const particle = document.createElement('div');
-    particle.className = 'particle';
-    particle.style.left = Math.random() * 100 + '%';
-    particle.style.animationDelay = Math.random() * 8 + 's';
-    container.appendChild(particle);
+  if (!container) return;
+  for (let i = 0; i < 24; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.animationDelay = Math.random() * 8 + 's';
+    container.appendChild(p);
   }
 }
 
-/* === Init === */
+// ===================== INIT =====================
 
-initSpellCanvas();
-initCosmicBackground();
+load();
+
+if (state.lastDay !== today()) {
+  generateDaily();
+  if (
+    state.lastDay &&
+    new Date(today()).getTime() - new Date(state.lastDay).getTime() >
+      86400000 * 1.5
+  ) {
+    state.streak = 0;
+  }
+}
+
 createParticles();
 renderHeader();
 renderDaily();
-renderSpellCategory('body', 'bodySpells');
-renderSpellCategory('mind', 'mindSpells');
-renderSpellCategory('spirit', 'spiritSpells');
-renderSpellCategory('environment', 'environmentSpells');
+renderAllSpellCategories();
 renderAchievements();
 renderRituals();
-initSpellSearch();
-initCustomSpellForm();
-initCustomRitualForm();
+setupCustomSpellUI();
+setupCustomRitualUI();

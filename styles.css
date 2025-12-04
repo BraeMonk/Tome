@@ -41,20 +41,24 @@ body {
   100% { transform: translateY(-100vh) translateX(50px); }
 }
 
+/* Utility */
+.hidden {
+  display: none !important;
+}
+
 /* Book Container */
 .book-container {
   position: relative;
   z-index: 2;
-  max-width: 960px; /* slightly wider */
+  max-width: 960px;
   margin: 24px auto;
-  padding: 0 12px;  /* keeps it off the screen edges on mobile */
+  padding: 0 12px;
   perspective: 2000px;
 }
 
 /* Book Cover */
 .book-cover {
   width: 100%;
-  /* was height: 100vh; this can feel huge/awkward on some screens */
   height: clamp(420px, 80vh, 720px);
   background: linear-gradient(145deg, #2d1b4e 0%, #1a0f2e 100%);
   border: 3px solid #8b6914;
@@ -130,10 +134,9 @@ body {
   background: linear-gradient(to bottom, #f4e4c1 0%, #e8d4a8 100%);
   border: 3px solid #8b6914;
   border-radius: 10px;
-  /* min-height: 100vh; can be overkill inside a container */
   min-height: 70vh;
   position: relative;
-  margin-top: 20px;          /* separates cover and open pages a bit */
+  margin-top: 20px;
   box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8),
               inset 0 0 100px rgba(139, 105, 20, 0.1);
   animation: pageOpen 1s ease-out;
@@ -172,12 +175,12 @@ body {
   padding: 25px 20px;
   display: flex;
   flex-direction: column;
-  align-items: center;    /* ← THIS centers everything in the header */
+  align-items: center;
   justify-content: center;
   gap: 12px;
   border-bottom: 2px solid #8b6914;
   text-align: center;
-  width: 100%;            /* ← prevents shifting */
+  width: 100%;
 }
 
 .header-ornament {
@@ -215,7 +218,7 @@ body {
   text-shadow: 0 0 10px rgba(138, 43, 226, 0.8);
   font-family: 'Cinzel', serif;
   text-align: center;
-  width: 100%;          /* ← forces full-width centering */
+  width: 100%;
 }
 
 .mana-label {
@@ -223,8 +226,8 @@ body {
   color: #5a4a7a;
   text-transform: uppercase;
   letter-spacing: 2px;
-  text-align: center;  
-  width: 100%;          /* ← also forces centering */
+  text-align: center;
+  width: 100%;
 }
 
 .level-display {
@@ -235,9 +238,9 @@ body {
   border: 2px solid #8b6914;
   border-radius: 20px;
   background: rgba(212, 175, 55, 0.1);
-  margin: 0 auto;          /* ← centers the level badge */
-  display: inline-block;   /* ← ensures it sizes correctly when centered */
-  text-align: center;      /* ← centers its text */
+  margin: 0 auto;
+  display: inline-block;
+  text-align: center;
 }
 
 /* Tabs */
@@ -246,14 +249,14 @@ body {
   grid-template-columns: repeat(4, 1fr);
   background: #3a2a5a;
   border-bottom: 2px solid #8b6914;
-  position: relative;   /* so we can control stacking */
-  z-index: 2;           /* sit above page edges etc */
+  position: relative;
+  z-index: 2;
 }
 
 .spell-tab {
-  width: 100%;          /* fill the whole grid cell horizontally */
-  height: 100%;         /* let padding define a big tap area */
-  padding: 18px 10px;   /* slightly bigger tap target */
+  width: 100%;
+  height: 100%;
+  padding: 18px 10px;
   border: none;
   background: transparent;
   color: #d4c4a4;
@@ -265,7 +268,7 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center; /* center icon + text in the hitbox */
+  justify-content: center;
   gap: 5px;
 }
 
@@ -290,7 +293,8 @@ body {
 /* Content */
 .grimoire-content {
   padding: 30px 32px;
-  min-height: 480px; /* slightly less tall, still roomy */
+  min-height: 480px;
+  text-align: center;
 }
 
 .spell-view {
@@ -342,8 +346,8 @@ body {
   font-family: 'Crimson Text', serif;
   font-size: 18px;
   cursor: pointer;
-  display: block;
-  margin: 20px auto;
+  display: inline-block;
+  margin: 20px auto 0;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(106, 75, 138, 0.4);
 }
@@ -357,12 +361,34 @@ body {
   transform: translateY(0);
 }
 
+.secondary-button {
+  background: transparent;
+  border: 2px solid #8b6914;
+  color: #8b6914;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-family: 'Crimson Text', serif;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.secondary-button:hover {
+  background: rgba(139, 105, 20, 0.1);
+}
+
+.secondary-button.disabled,
+.secondary-button:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
 /* Spell Lists */
 .spell-list {
   list-style: none;
   display: grid;
   gap: 15px;
-  grid-template-columns: 1fr; /* clean single column by default */
+  grid-template-columns: 1fr;
 }
 
 .spell-list li {
@@ -374,6 +400,7 @@ body {
   overflow: hidden;
   transition: all 0.3s ease;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 .spell-list li:hover {
@@ -440,9 +467,49 @@ body {
   transform: scale(0.98);
 }
 
+.cast-button.small {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+/* Spell action row */
+.spell-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.secondary-button.small {
+  padding: 8px 14px;
+  font-size: 14px;
+}
+
+/* Favourites & little icon buttons */
+.icon-button {
+  border: 1px solid #8b6914;
+  background: #f9f3e8;
+  padding: 6px 10px;
+  border-radius: 16px;
+  font-size: 13px;
+  cursor: pointer;
+  font-family: 'Crimson Text', serif;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.favorite-button.active {
+  background: #ffd700;
+  color: #2d1b4e;
+  border-color: #d4af37;
+}
+
 /* Spell Categories */
 .spell-category {
   margin: 30px 0;
+  text-align: center;
 }
 
 .category-title {
@@ -452,6 +519,97 @@ body {
   margin-bottom: 15px;
   padding-bottom: 10px;
   border-bottom: 2px solid #d4b896;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Spell library controls */
+.spell-library-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  justify-content: center;
+  align-items: center;
+  margin: 10px 0 22px;
+}
+
+#spellSearch {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 2px solid #d4b896;
+  min-width: 220px;
+  max-width: 280px;
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  background: #f9f3e8;
+  color: #2d1b4e;
+}
+
+/* Custom cards (spell & ritual creators) */
+.custom-card {
+  background: linear-gradient(145deg, #f9f3e8 0%, #efe5d5 100%);
+  border: 3px solid #8b6914;
+  border-radius: 12px;
+  padding: 18px 18px 22px;
+  margin: 10px auto 26px;
+  max-width: 640px;
+  text-align: left;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15);
+}
+
+.custom-card .section-subtitle {
+  margin-bottom: 6px;
+}
+
+.custom-help {
+  font-size: 14px;
+  color: #6b5a3a;
+  font-style: italic;
+  margin-bottom: 12px;
+}
+
+.custom-form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.custom-form-row label {
+  font-size: 14px;
+  color: #4a3a1a;
+  font-weight: bold;
+}
+
+.custom-form-row input,
+.custom-form-row textarea,
+.custom-form-row select {
+  padding: 8px 10px;
+  border-radius: 6px;
+  border: 2px solid #d4b896;
+  font-family: 'Crimson Text', serif;
+  font-size: 15px;
+  background: #fffaf2;
+  color: #2d1b4e;
+}
+
+.custom-form-row textarea {
+  resize: vertical;
+}
+
+.custom-form-inline {
+  flex-direction: row;
+  gap: 12px;
+}
+
+.custom-form-inline > div {
+  flex: 1;
+  min-width: 0;
+}
+
+.custom-actions {
+  display: flex;
+  justify-content: flex-end;
 }
 
 /* Stats */
@@ -587,7 +745,7 @@ body {
   list-style: none;
   display: grid;
   gap: 20px;
-  grid-template-columns: 1fr; /* clean single column */
+  grid-template-columns: 1fr;
 }
 
 .ritual-item {
@@ -596,6 +754,7 @@ body {
   border-radius: 12px;
   padding: 25px;
   position: relative;
+  text-align: center;
 }
 
 .ritual-title {
@@ -617,14 +776,13 @@ body {
   margin: 15px 0;
 }
 
-/* ⬇⬇⬇ VISIBILITY FIX FOR RITUAL STEPS ⬇⬇⬇ */
 .ritual-step {
   padding: 10px;
   margin: 5px 0;
   background: rgba(106, 75, 138, 0.08);
   border-left: 3px solid #6a4b8a;
   border-radius: 5px;
-  color: #6a0dad;      /* dark text so it’s clearly visible */
+  color: #6a0dad;
   font-size: 15px;
   line-height: 1.5;
 }
@@ -634,11 +792,10 @@ body {
   border-left-color: #8b6914;
   text-decoration: line-through;
   opacity: 0.85;
-  color: #6a0dad;      /* still readable, but feels “faded” */
+  color: #6a0dad;
 }
-/* ⬆⬆⬆ END VISIBILITY FIX ⬆⬆⬆ */
 
-/* Spell Cast Effect */
+/* Spell Cast Effect (popup) */
 .spell-cast-effect {
   position: fixed;
   top: 50%;
@@ -687,6 +844,22 @@ body {
   to { transform: translate(-50%, -100px); opacity: 0; }
 }
 
+/* Canvas-based spell animation overlay */
+.spell-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.spell-canvas.active {
+  opacity: 1;
+}
+
 /* Footer */
 .grimoire-footer {
   background: linear-gradient(to top, #2d1b4e 0%, transparent 100%);
@@ -706,54 +879,6 @@ body {
   font-style: italic;
   color: #5a4a7a;
   font-size: 16px;
-}
-
-/* ===== GLOBAL PAGE TEXT CENTERING PASS ===== */
-
-/* Center most content inside the open pages */
-.grimoire-content {
-  text-align: center;
-}
-
-/* Center spell library section headings and category titles */
-.spell-category,
-.category-title {
-  text-align: center;
-}
-
-.category-title {
-  margin-left: auto;
-  margin-right: auto;
-}
-
-/* Center everything inside spell cards */
-.spell-list li {
-  text-align: center;
-}
-
-.spell-name,
-.spell-desc,
-.spell-reward {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-/* Center ritual card content */
-.ritual-item {
-  text-align: center;
-}
-
-.ritual-title,
-.ritual-desc {
-  margin-left: auto;
-  margin-right: auto;
-  text-align: center;
-}
-
-/* Center the “Progress: X/Y” line inside rituals */
-.ritual-item > div[style*="Progress"] {
-  text-align: center !important;
 }
 
 /* Responsive */
@@ -786,5 +911,17 @@ body {
   .grimoire-header {
     flex-direction: column;
     align-items: center;
+  }
+
+  .spell-library-controls {
+    flex-direction: column;
+  }
+
+  .custom-form-inline {
+    flex-direction: column;
+  }
+
+  .custom-actions {
+    justify-content: center;
   }
 }

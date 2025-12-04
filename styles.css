@@ -17,16 +17,9 @@ body {
     radial-gradient(circle at top, #3a1a4f 0%, #05030a 55%, #020007 100%);
 }
 
-/* Cosmic background canvas */
-.cosmic-canvas {
-  position: fixed;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 0;
-  pointer-events: none;
-  mix-blend-mode: screen;
-  opacity: 0.6;
+.app-shell {
+  position: relative;
+  z-index: 1;
 }
 
 /* Magical particles */
@@ -59,91 +52,236 @@ body {
   display: none !important;
 }
 
-/* =============== ARCANE OS FRAME =============== */
+/* =============== SKY + ORB + FLOATING DAILIES =============== */
+
+.sky-section {
+  position: relative;
+  padding: 60px 16px 40px;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.cosmic-canvas {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.6;
+}
+
+.sky-inner {
+  position: relative;
+  z-index: 2;
+  border-radius: 22px;
+  padding: 32px 16px 32px;
+  background:
+    radial-gradient(circle at top, rgba(120, 90, 210, 0.32), transparent 65%),
+    radial-gradient(circle at bottom, rgba(255, 255, 255, 0.04), transparent 60%),
+    linear-gradient(145deg, rgba(20, 10, 40, 0.9), rgba(7, 3, 18, 0.96));
+  box-shadow:
+    0 0 0 1px rgba(185, 160, 255, 0.4),
+    0 26px 80px rgba(0, 0, 0, 0.85),
+    0 0 80px rgba(88, 58, 170, 0.8);
+  display: grid;
+  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+
+/* Mana orb stack */
+
+.mana-orb-stack {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mana-orb-glow {
+  position: absolute;
+  width: 240px;
+  height: 240px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.7), transparent 55%),
+    radial-gradient(circle at 70% 80%, rgba(138, 43, 226, 0.9), transparent 60%);
+  filter: blur(2px);
+  animation: orbGlow 7s ease-in-out infinite;
+}
+
+@keyframes orbGlow {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50%      { transform: scale(1.12); opacity: 1; }
+}
+
+.mana-orb-core {
+  position: relative;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 30% 20%, #fff 0%, #f4e4ff 30%, #cda9ff 60%, #6b3fdc 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-shadow:
+    0 0 24px rgba(255, 255, 255, 0.9),
+    0 0 50px rgba(167, 119, 255, 0.9),
+    0 0 90px rgba(80, 40, 155, 0.9);
+}
+
+.mana-orb-core::before {
+  content: "";
+  position: absolute;
+  inset: 12px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.8);
+}
+
+.mana-orb-mana {
+  position: relative;
+  font-family: 'Cinzel', serif;
+  font-size: 48px;
+  color: #3a126a;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.8);
+}
+
+.mana-orb-label {
+  margin-top: 4px;
+  font-size: 13px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #3b144f;
+}
+
+.mana-orb-level {
+  margin-top: 4px;
+  font-size: 14px;
+  font-family: 'Cinzel', serif;
+  color: #271038;
+}
+
+/* Floating daily cards around orb */
+
+.floating-daily-wrapper {
+  text-align: center;
+}
+
+.sky-intro {
+  font-size: 15px;
+  color: #d8c6ff;
+  margin-bottom: 18px;
+  font-style: italic;
+}
+
+.floating-dailies {
+  position: relative;
+  width: 100%;
+  max-width: 420px;
+  margin: 0 auto;
+  height: 260px;
+}
+
+.floating-daily-card {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: radial-gradient(circle at top, #fffaf2 0%, #f3e0c9 50%, #edd3b0 100%);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.4),
+    0 0 18px rgba(255, 227, 187, 0.8);
+  transform-origin: center;
+  text-align: center;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.floating-daily-card:hover {
+  transform: translate(-50%, -50%) translateY(-4px) scale(1.03);
+  box-shadow:
+    0 14px 28px rgba(0, 0, 0, 0.5),
+    0 0 26px rgba(255, 235, 200, 0.9);
+}
+
+.floating-daily-name {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  color: #2a1734;
+  margin-bottom: 4px;
+}
+
+.floating-daily-reward {
+  font-size: 13px;
+  color: #6a4b10;
+}
+
+.floating-daily-cast {
+  margin-top: 8px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  border: none;
+  background: linear-gradient(135deg, #b27b1b 0%, #e6c14f 100%);
+  color: #2d1b2f;
+  font-size: 12px;
+  font-family: 'Cinzel', serif;
+  cursor: pointer;
+}
+
+/* =============== BOOK DOCK + GRIMOIRE =============== */
 
 .book-container {
   position: relative;
-  z-index: 2;
-  max-width: 1080px;
-  margin: 32px auto;
-  padding: 18px 16px 28px;
-  border-radius: 18px;
-  background: radial-gradient(circle at top left, #3a244f 0%, #13081f 40%, #050109 100%);
-  box-shadow:
-    0 0 0 1px rgba(200, 170, 255, 0.3),
-    0 24px 80px rgba(0, 0, 0, 0.85),
-    0 0 80px rgba(99, 63, 180, 0.55);
-  overflow: visible;
+  max-width: 960px;
+  margin: 24px auto 32px;
+  padding: 0 12px;
 }
 
-/* OS top bar */
-.book-container::before {
-  content: "Arcane OS • Tome Module";
-  position: absolute;
-  top: 8px;
-  left: 18px;
-  right: 18px;
-  height: 28px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, rgba(10, 6, 20, 0.95), rgba(70, 40, 110, 0.9));
-  color: #e6d5ff;
-  font-family: 'Cinzel', serif;
-  font-size: 13px;
-  letter-spacing: 0.08em;
-  display: flex;
-  align-items: center;
-  padding: 0 12px 0 38px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+.book-dock-label {
+  text-align: center;
+  font-size: 14px;
+  color: #e5d4ff;
+  margin-bottom: 8px;
+  font-style: italic;
 }
 
-/* "window controls" */
-.book-container::after {
-  content: "";
-  position: absolute;
-  top: 14px;
-  left: 26px;
-  width: 18px;
-  height: 18px;
-  border-radius: 999px;
-  background:
-    radial-gradient(circle at 30% 30%, #fff, transparent 55%),
-    radial-gradient(circle at 70% 70%, #9a77ff, #3b1d88);
-  box-shadow:
-    0 0 8px rgba(180, 147, 255, 0.8),
-    0 0 18px rgba(140, 100, 230, 0.7);
-}
-
-/* Add some spacing below the OS bar */
-.book-cover,
-.book-pages {
-  margin-top: 30px;
-}
-
-/* =============== BOOK COVER =============== */
+/* Docked cover (just the top of the grimoire) */
 
 .book-cover {
   width: 100%;
-  height: clamp(420px, 72vh, 700px);
+  height: 120px;
   background:
     radial-gradient(circle at 20% 0%, rgba(255, 215, 0, 0.18), transparent 55%),
     linear-gradient(145deg, #3f245f 0%, #1c102f 40%, #0b0716 100%);
   border: 3px solid #c99b2d;
-  border-radius: 14px;
+  border-radius: 14px 14px 8px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   position: relative;
   cursor: pointer;
-  transition: transform 0.6s ease;
   box-shadow:
     0 20px 60px rgba(0, 0, 0, 0.8),
-    inset 0 0 50px rgba(139, 105, 20, 0.3);
-  transform-origin: left center;
+    inset 0 0 40px rgba(139, 105, 20, 0.3);
 }
 
-.book-cover.open {
-  transform: rotateY(-180deg);
-  pointer-events: none;
+.book-cover::after {
+  content: "";
+  position: absolute;
+  bottom: -10px;
+  left: 8%;
+  right: 8%;
+  height: 10px;
+  border-radius: 0 0 10px 10px;
+  background: linear-gradient(to bottom, #d9c29a, #b99a70);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.9);
 }
 
 .cover-ornament {
@@ -153,58 +291,39 @@ body {
 }
 
 .rune {
-  font-size: 88px;
+  font-size: 38px;
   color: #ffd700;
   text-shadow:
-    0 0 16px #ffd700,
-    0 0 36px #ff8800,
-    0 0 60px rgba(255, 255, 255, 0.5);
+    0 0 12px #ffd700,
+    0 0 24px #ff8800,
+    0 0 40px rgba(255, 255, 255, 0.5);
   animation: runePulse 3.2s ease-in-out infinite;
 }
 
 @keyframes runePulse {
-  0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 8px #ffd700); }
-  50%      { transform: scale(1.15); opacity: 0.9; filter: drop-shadow(0 0 18px #ffb700); }
+  0%, 100% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 6px #ffd700); }
+  50%      { transform: scale(1.15); opacity: 0.9; filter: drop-shadow(0 0 14px #ffb700); }
 }
 
 .book-cover h1 {
   font-family: 'Cinzel', serif;
-  font-size: 50px;
-  margin: 20px 0 6px;
+  font-size: 26px;
+  margin: 6px 0 2px;
   color: #ffe89c;
   text-shadow:
     0 0 4px #000,
     0 3px 8px rgba(0, 0, 0, 0.8);
   letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
 .subtitle {
-  font-size: 22px;
+  font-size: 14px;
   font-style: italic;
   color: #f2d086;
-  margin-top: 10px;
-  text-shadow: 0 0 6px rgba(0, 0, 0, 0.7);
 }
 
-.cover-glow {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 340px;
-  height: 340px;
-  background: radial-gradient(circle, rgba(255, 215, 0, 0.22) 0%, transparent 70%);
-  animation: coverGlow 5s ease-in-out infinite;
-  pointer-events: none;
-  filter: blur(1px);
-}
-
-@keyframes coverGlow {
-  0%, 100% { opacity: 0.55; transform: translate(-50%, -50%) scale(1); }
-  50%      { opacity: 1; transform: translate(-50%, -50%) scale(1.25); }
-}
-
-/* =============== OPEN BOOK PAGES =============== */
+/* OPEN PAGES (no spine in the middle now) */
 
 .book-pages {
   display: none;
@@ -212,14 +331,15 @@ body {
   border-radius: 16px;
   border: 3px solid #c99b2d;
   background:
-    radial-gradient(circle at top, rgba(255, 255, 255, 0.95) 0%, rgba(238, 224, 197, 0.96) 45%, rgba(230, 210, 180, 0.96) 100%),
+    radial-gradient(circle at top, rgba(255, 255, 255, 0.97) 0%, rgba(238, 224, 197, 0.98) 45%, rgba(230, 210, 180, 0.98) 100%),
     repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.05) 0, transparent 1px, transparent 6px);
-  min-height: 70vh;
+  min-height: 60vh;
+  margin-top: 26px;
   box-shadow:
-    0 20px 70px rgba(0, 0, 0, 0.85),
+    0 20px 70px rgba(0, 0, 0, 0.9),
     inset 0 0 80px rgba(208, 178, 120, 0.28);
-  animation: pageOpen 0.9s ease-out;
   overflow: hidden;
+  animation: pageOpen 0.4s ease-out;
 }
 
 .book-pages.open {
@@ -227,57 +347,36 @@ body {
 }
 
 @keyframes pageOpen {
-  from { opacity: 0; transform: scale(0.95) translateY(10px); }
-  to   { opacity: 1; transform: scale(1) translateY(0); }
+  from { opacity: 0; transform: translateY(14px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
-/* Fake book spine & gutter */
-.book-pages::before {
-  content: "";
+/* Close button */
+
+.close-book-button {
   position: absolute;
-  top: 0;
-  left: 50%;
-  width: 3px;
-  height: 100%;
-  transform: translateX(-50%);
-  background: linear-gradient(to bottom, #d9c7a2, #c1aa86, #d9c7a2);
+  top: 10px;
+  right: 10px;
+  border: none;
+  background: rgba(45, 27, 78, 0.9);
+  color: #f4e4c1;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  cursor: pointer;
+  font-size: 16px;
+  font-family: 'Cinzel', serif;
   box-shadow:
-    inset 0 0 6px rgba(0, 0, 0, 0.25),
-    0 0 10px rgba(0, 0, 0, 0.25);
-  opacity: 0.9;
+    0 0 8px rgba(0, 0, 0, 0.6),
+    0 0 12px rgba(255, 255, 255, 0.4);
+  z-index: 4;
 }
 
-/* Page edge textures */
-.page-edge-left,
-.page-edge-right {
-  position: absolute;
-  top: 0;
-  width: 20px;
-  height: 100%;
-  background: repeating-linear-gradient(
-    to bottom,
-    #d4c4a4 0px,
-    #c8b894 2px,
-    #d4c4a4 4px
-  );
-  z-index: 1;
-}
-
-.page-edge-left {
-  left: 0;
-  border-right: 1px solid #b7965a;
-}
-
-.page-edge-right {
-  right: 0;
-  border-left: 1px solid #b7965a;
-}
-
-/* =============== HEADER / HUD =============== */
+/* HEADER INSIDE PAGES */
 
 .grimoire-header {
   background: linear-gradient(to bottom, rgba(45, 27, 78, 0.96) 0%, rgba(45, 27, 78, 0.85) 55%, transparent 100%);
-  padding: 22px 20px 16px;
+  padding: 26px 20px 18px;
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   gap: 12px;
@@ -300,31 +399,6 @@ body {
   text-align: center;
 }
 
-/* Mana halo */
-.mana-crystal::before {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 110px;
-  height: 110px;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 30% 20%, rgba(255, 255, 255, 0.6), transparent 55%),
-    radial-gradient(circle at 70% 80%, rgba(138, 43, 226, 0.85), transparent 60%);
-  opacity: 0.7;
-  filter: blur(1px);
-  animation: manaOrbit 9s linear infinite;
-  pointer-events: none;
-}
-
-@keyframes manaOrbit {
-  0%   { transform: translate(-50%, -50%) rotate(0deg) scale(1);   opacity: 0.6; }
-  50%  { transform: translate(-50%, -50%) rotate(180deg) scale(1.08); opacity: 1; }
-  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); opacity: 0.6; }
-}
-
 .crystal-glow {
   position: absolute;
   top: 50%;
@@ -344,7 +418,7 @@ body {
 
 #manaDisplay {
   position: relative;
-  font-size: 38px;
+  font-size: 32px;
   font-weight: bold;
   color: #fbe1ff;
   text-shadow:
@@ -375,7 +449,7 @@ body {
     0 4px 10px rgba(0, 0, 0, 0.4);
 }
 
-/* =============== TABS =============== */
+/* TABS */
 
 .spell-tabs {
   display: grid;
@@ -387,17 +461,9 @@ body {
   overflow: hidden;
 }
 
-.spell-tabs::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 50% 100%, rgba(255, 215, 0, 0.15), transparent 65%);
-  pointer-events: none;
-}
-
 .spell-tab {
   position: relative;
-  padding: 16px 10px;
+  padding: 14px 10px;
   border: none;
   background: transparent;
   color: #e8dcff;
@@ -417,7 +483,7 @@ body {
   border-right: none;
 }
 
-.spell-tab .tab-icon {
+.tab-icon {
   font-size: 20px;
 }
 
@@ -439,52 +505,14 @@ body {
   background: linear-gradient(90deg, transparent, #ffe9a6, transparent);
 }
 
-.spell-tab:hover:not(.active) {
-  background: rgba(106, 75, 138, 0.45);
-}
-
-/* =============== CONTENT AREA =============== */
+/* CONTENT AREA */
 
 .grimoire-content {
   position: relative;
-  padding: 28px 36px 32px;
-  min-height: 480px;
+  padding: 26px 32px 30px;
+  min-height: 380px;
   text-align: center;
   z-index: 1;
-}
-
-/* Rotating sigils on pages */
-.grimoire-content::before,
-.grimoire-content::after {
-  content: "⟐";
-  position: absolute;
-  font-size: 70px;
-  color: rgba(180, 140, 240, 0.18);
-  pointer-events: none;
-}
-
-.grimoire-content::before {
-  top: 40px;
-  left: 36px;
-  animation: sigilSpin 28s linear infinite;
-}
-
-.grimoire-content::after {
-  bottom: 40px;
-  right: 36px;
-  animation: sigilSpinReverse 32s linear infinite;
-}
-
-@keyframes sigilSpin {
-  0%   { transform: rotate(0deg) scale(1);   opacity: 0.22; }
-  50%  { transform: rotate(180deg) scale(1.1); opacity: 0.35; }
-  100% { transform: rotate(360deg) scale(1); opacity: 0.22; }
-}
-
-@keyframes sigilSpinReverse {
-  0%   { transform: rotate(0deg) scale(1.1); opacity: 0.2; }
-  50%  { transform: rotate(-180deg) scale(1); opacity: 0.32; }
-  100% { transform: rotate(-360deg) scale(1.1); opacity: 0.2; }
 }
 
 .spell-view {
@@ -493,17 +521,17 @@ body {
 
 .spell-view.active {
   display: block;
-  animation: fadeIn 0.5s ease;
+  animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
-  from { opacity: 0; transform: translateY(12px); }
+  from { opacity: 0; transform: translateY(10px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 .chapter-title {
   font-family: 'Cinzel', serif;
-  font-size: 30px;
+  font-size: 28px;
   color: #2d1b4e;
   margin-bottom: 8px;
   letter-spacing: 0.12em;
@@ -535,21 +563,21 @@ body {
   font-size: 17px;
 }
 
-/* =============== BUTTONS =============== */
+/* BUTTONS */
 
 .action-button {
   background: linear-gradient(135deg, #6a4b8a 0%, #4a2a6a 40%, #2e1744 100%);
   border: 2px solid #c99b2d;
   color: #ffe9bd;
-  padding: 12px 26px;
+  padding: 10px 24px;
   border-radius: 999px;
   font-family: 'Cinzel', serif;
-  font-size: 17px;
+  font-size: 16px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  margin: 18px auto;
+  margin: 12px auto 18px;
   transition: all 0.25s ease;
   box-shadow:
     0 4px 16px rgba(63, 37, 110, 0.7),
@@ -563,20 +591,14 @@ body {
     0 0 22px rgba(255, 220, 160, 0.5);
 }
 
-.action-button:active {
-  transform: translateY(0);
-  box-shadow:
-    0 4px 16px rgba(63, 37, 110, 0.7);
-}
-
 .secondary-button {
   background: rgba(255, 252, 240, 0.05);
   border: 2px solid #c99b2d;
   color: #7b5b1a;
-  padding: 10px 18px;
+  padding: 8px 16px;
   border-radius: 10px;
   font-family: 'Crimson Text', serif;
-  font-size: 15px;
+  font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
 }
@@ -585,13 +607,7 @@ body {
   background: rgba(255, 239, 191, 0.2);
 }
 
-.secondary-button.disabled,
-.secondary-button:disabled {
-  opacity: 0.5;
-  cursor: default;
-}
-
-/* =============== DAILY / SPELL LISTS =============== */
+/* SPELL LISTS INSIDE BOOK */
 
 .spell-list {
   list-style: none;
@@ -668,15 +684,7 @@ body {
     0 0 10px rgba(106, 13, 173, 0.6);
 }
 
-/* Spell actions row (library cards) */
-
-.spell-actions {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 10px;
-}
+/* Cast button for daily list */
 
 .cast-button {
   background: linear-gradient(145deg, #b27b1b 0%, #e6c14f 100%);
@@ -701,60 +709,7 @@ body {
     0 0 14px rgba(255, 234, 180, 0.85);
 }
 
-.cast-button:active {
-  transform: translateY(0);
-  box-shadow:
-    0 3px 10px rgba(139, 105, 20, 0.5);
-}
-
-.cast-button.small {
-  padding: 7px 16px;
-  font-size: 14px;
-}
-
-/* little pill buttons */
-
-.secondary-button.small {
-  padding: 6px 14px;
-  font-size: 13px;
-}
-
-.icon-button {
-  border: 1px solid #c99b2d;
-  background: #fdf4e3;
-  padding: 5px 10px;
-  border-radius: 999px;
-  font-size: 13px;
-  cursor: pointer;
-  font-family: 'Crimson Text', serif;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  color: #7b5b1a;
-}
-
-.favorite-button.active {
-  background: #ffd700;
-  color: #2d1b4e;
-  border-color: #f1c44f;
-}
-
-/* Spell category headings */
-
-.spell-category {
-  margin: 26px 0;
-}
-
-.category-title {
-  font-family: 'Cinzel', serif;
-  font-size: 22px;
-  color: #2d1b4e;
-  margin-bottom: 10px;
-  padding-bottom: 8px;
-  border-bottom: 2px solid #d4b896;
-}
-
-/* Spell library controls */
+/* SPELL LIBRARY CONTROLS + CUSTOM FORMS */
 
 .spell-library-controls {
   display: flex;
@@ -777,7 +732,20 @@ body {
   color: #2d1b4e;
 }
 
-/* =============== CUSTOM CARDS (SPELL & RITUAL) =============== */
+.spell-category {
+  margin: 26px 0;
+}
+
+.category-title {
+  font-family: 'Cinzel', serif;
+  font-size: 22px;
+  color: #2d1b4e;
+  margin-bottom: 10px;
+  padding-bottom: 8px;
+  border-bottom: 2px solid #d4b896;
+}
+
+/* Custom cards */
 
 .custom-card {
   background:
@@ -785,7 +753,7 @@ body {
   border: 3px solid #c99b2d;
   border-radius: 14px;
   padding: 16px 18px 22px;
-  margin: 8px auto 24px;
+  margin: 8px auto 20px;
   max-width: 720px;
   text-align: left;
   box-shadow:
@@ -843,7 +811,7 @@ body {
   justify-content: flex-end;
 }
 
-/* =============== STATS =============== */
+/* STATS */
 
 .stat-cards {
   display: grid;
@@ -983,7 +951,7 @@ body {
   font-weight: bold;
 }
 
-/* =============== RITUALS =============== */
+/* RITUALS */
 
 .ritual-list {
   list-style: none;
@@ -1040,6 +1008,7 @@ body {
   font-size: 14px;
   line-height: 1.5;
   text-align: left;
+  cursor: pointer;
 }
 
 .ritual-step.completed {
@@ -1049,7 +1018,7 @@ body {
   opacity: 0.9;
 }
 
-/* =============== SPELL CAST OVERLAY + CANVAS =============== */
+/* SPELL CAST OVERLAY + CANVAS */
 
 .spell-cast-effect {
   position: fixed;
@@ -1101,7 +1070,8 @@ body {
   to   { transform: translate(-50%, -105px); opacity: 0; }
 }
 
-/* Canvas-based spell animation overlay */
+/* canvas burst */
+
 .spell-canvas {
   position: fixed;
   inset: 0;
@@ -1117,7 +1087,7 @@ body {
   opacity: 0.9;
 }
 
-/* =============== FOOTER =============== */
+/* FOOTER */
 
 .grimoire-footer {
   background: linear-gradient(to top, rgba(45, 27, 78, 0.9) 0%, transparent 100%);
@@ -1139,45 +1109,35 @@ body {
   font-size: 15px;
 }
 
-/* =============== RESPONSIVE =============== */
+/* RESPONSIVE */
 
 @media (max-width: 900px) {
-  .grimoire-content::before,
-  .grimoire-content::after {
-    display: none;
+  .sky-inner {
+    grid-template-columns: 1fr;
+    text-align: center;
+  }
+
+  .floating-dailies {
+    height: 260px;
   }
 }
 
 @media (max-width: 768px) {
+  .sky-section {
+    padding: 40px 10px 24px;
+  }
+
+  .sky-inner {
+    padding: 24px 12px 24px;
+  }
+
   .book-container {
     margin: 20px 10px 26px;
-    padding: 18px 10px 22px;
+    padding: 0 4px;
   }
 
-  .book-container::before {
-    font-size: 11px;
-    padding-left: 34px;
-  }
-
-  .book-container::after {
-    left: 20px;
-  }
-
-  .book-cover {
-    height: clamp(360px, 70vh, 620px);
-  }
-
-  .grimoire-content {
-    padding: 20px 16px 24px;
-    min-height: auto;
-  }
-
-  .chapter-title {
-    font-size: 24px;
-  }
-
-  .spell-tabs {
-    grid-template-columns: repeat(2, 1fr);
+  .book-pages {
+    margin-top: 18px;
   }
 
   .grimoire-header {
@@ -1192,6 +1152,19 @@ body {
 
   .level-display {
     justify-self: center;
+  }
+
+  .spell-tabs {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grimoire-content {
+    padding: 20px 16px 24px;
+    min-height: auto;
+  }
+
+  .chapter-title {
+    font-size: 24px;
   }
 
   .spell-library-controls {

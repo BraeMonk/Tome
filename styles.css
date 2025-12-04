@@ -1701,7 +1701,7 @@ body {
 @media (max-width: 768px) {
   .orbit-spells {
     transform-origin: 50% 50%;
-    transform: scale(0.65);
+    transform: scale(0.5);
   }
 }
 

@@ -1,228 +1,238 @@
 <!DOCTYPE html>
 <html lang='en'>
 <head>
-<meta charset='UTF-8'>
-<meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>
-<title>Tome</title>
-<link rel='manifest' href='manifest.json'>
-<link rel='stylesheet' href='styles.css'>
-<link href='https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital@0;1&display=swap' rel='stylesheet'>
+  <meta charset='UTF-8'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, user-scalable=no'>
+  <title>Tome</title>
+  <link rel='manifest' href='manifest.json'>
+  <link rel='stylesheet' href='styles.css'>
+  <link href='https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital@0;1&display=swap' rel='stylesheet'>
 </head>
 <body>
 
-<canvas id="cosmicCanvas" class="cosmic-canvas" aria-hidden="true"></canvas>
-
 <div class='particles' id='particles'></div>
 
-<div class='book-container'>
-  <div class='book-cover' id='bookCover'>
-    <div class='cover-ornament'>
-      <div class='rune'>⟐</div>
-      <h1>Tome</h1>
-      <div class='subtitle'>Book of Life Spells</div>
-      <div class='cover-glow'></div>
+<div class="app-shell">
+  <!-- STARS + MANA ORB + FLOATING DAILIES -->
+  <section class="sky-section">
+    <canvas id="cosmicCanvas" class="cosmic-canvas"></canvas>
+    <div class="sky-inner">
+      <div class="mana-orb-stack">
+        <div class="mana-orb-glow"></div>
+        <div class="mana-orb-core">
+          <div class="mana-orb-mana" id="manaDisplayTop">0</div>
+          <div class="mana-orb-label">Mana</div>
+          <div class="mana-orb-level" id="levelDisplayTop">Novice</div>
+        </div>
+      </div>
+
+      <div class="floating-daily-wrapper">
+        <p class="sky-intro">
+          Your active daily quests orbit the Tome's core. Tap a card to cast.
+        </p>
+        <div id="floatingDailyContainer" class="floating-dailies"></div>
+      </div>
     </div>
-  </div>
+  </section>
 
-  <div class='book-pages' id='bookPages'>
-    <div class='page-edge-left'></div>
-    <div class='page-edge-right'></div>
-    
-    <header class='grimoire-header'>
-      <div class='header-ornament'>✦</div>
-      <div class='mana-crystal'>
-        <div class='crystal-glow'></div>
-        <div id='manaDisplay'>0</div>
-        <div class='mana-label'>Mana</div>
+  <!-- BOOK DOCK + FULL GRIMOIRE -->
+  <div class='book-container'>
+    <div class="book-dock-label">Tap the Tome to open your grimoire</div>
+
+    <div class='book-cover' id='bookCover'>
+      <div class='cover-ornament'>
+        <div class='rune'>⟐</div>
+        <h1>Tome</h1>
+        <div class='subtitle'>Book of Life Spells</div>
       </div>
-      <div class='level-display'>
-        <span id='levelDisplay'>Novice</span>
-      </div>
-    </header>
+    </div>
 
-    <canvas id="spellCanvas" class="spell-canvas" aria-hidden="true"></canvas>
+    <div class='book-pages' id='bookPages'>
+      <button id="closeBook" class="close-book-button">✕</button>
 
-    <nav class='spell-tabs'>
-      <button class='spell-tab active' data-tab='daily'>
-        <span class='tab-icon'>☀</span>
-        <span>Daily Quests</span>
-      </button>
-      <button class='spell-tab' data-tab='spells'>
-        <span class='tab-icon'>📜</span>
-        <span>Spell Library</span>
-      </button>
-      <button class='spell-tab' data-tab='stats'>
-        <span class='tab-icon'>⚔</span>
-        <span>Progress</span>
-      </button>
-      <button class='spell-tab' data-tab='rituals'>
-        <span class='tab-icon'>🌙</span>
-        <span>Rituals</span>
-      </button>
-    </nav>
-
-    <main class='grimoire-content'>
-      <section id='daily' class='spell-view active'>
-        <h2 class='chapter-title'>Daily Quests</h2>
-        <div class='chapter-divider'>✦ ✦ ✦</div>
-        <p class='spell-intro'>Complete these sacred tasks before the sun sets to maintain your streak.</p>
-        <button id='newSpread' class='action-button'>🔮 Draw New Spread</button>
-        <ul id='dailyList' class='spell-list'></ul>
-      </section>
-
-      <section id='spells' class='spell-view'>
-        <h2 class='chapter-title'>The Complete Spell Library</h2>
-        <div class='chapter-divider'>✦ ✦ ✦</div>
-        <p class='spell-intro'>All known spells for wellness and vitality.</p>
-        
-        <div class='spell-library-controls'>
-          <input type='text' id='spellSearch' placeholder='Search spells by name or effect...'>
-          <button id='clearSearch' class='secondary-button'>Clear</button>
-          <button id='toggleCustomSpell' class='secondary-button'>✚ Custom Spell</button>
+      <header class='grimoire-header'>
+        <div class='header-ornament'>✦</div>
+        <div class='mana-crystal'>
+          <div class='crystal-glow'></div>
+          <div id='manaDisplay'>0</div>
+          <div class='mana-label'>Mana</div>
         </div>
+        <div class='level-display'>
+          <span id='levelDisplay'>Novice</span>
+        </div>
+      </header>
 
-        <div id='customSpellCard' class='custom-card hidden'>
-          <h3 class='section-subtitle'>Create Custom Spell</h3>
-          <p class='custom-help'>Design your own life spell. It will appear in the library and can be added to your daily quests.</p>
-          
-          <div class='custom-form-row'>
-            <label for='customSpellName'>Spell Name</label>
-            <input id='customSpellName' type='text' maxlength='60' placeholder='e.g. Gentle Wake-Up Ritual'>
+      <nav class='spell-tabs'>
+        <button class='spell-tab active' data-tab='daily'>
+          <span class='tab-icon'>☀</span>
+          <span>Daily Quests</span>
+        </button>
+        <button class='spell-tab' data-tab='spells'>
+          <span class='tab-icon'>📜</span>
+          <span>Spell Library</span>
+        </button>
+        <button class='spell-tab' data-tab='stats'>
+          <span class='tab-icon'>⚔</span>
+          <span>Progress</span>
+        </button>
+        <button class='spell-tab' data-tab='rituals'>
+          <span class='tab-icon'>🌙</span>
+          <span>Rituals</span>
+        </button>
+      </nav>
+
+      <main class='grimoire-content'>
+        <!-- DAILY (detailed view inside the book) -->
+        <section id='daily' class='spell-view active'>
+          <h2 class='chapter-title'>Daily Quests</h2>
+          <div class='chapter-divider'>✦ ✦ ✦</div>
+          <p class='spell-intro'>Complete these sacred tasks before the sun sets to maintain your streak.</p>
+          <button id='newSpread' class='action-button'>🔮 Draw New Spread</button>
+          <ul id='dailyList' class='spell-list'></ul>
+        </section>
+
+        <!-- SPELL LIBRARY -->
+        <section id='spells' class='spell-view'>
+          <h2 class='chapter-title'>The Complete Spell Library</h2>
+          <div class='chapter-divider'>✦ ✦ ✦</div>
+          <p class='spell-intro'>All known spells for wellness and vitality.</p>
+
+          <div class="spell-library-controls">
+            <input id="spellSearch" type="text" placeholder="Search spells by name or effect…">
+            <button id="clearSpellSearch" class="secondary-button">Clear</button>
+            <button id="toggleCustomSpell" class="secondary-button">✚ Custom Spell</button>
           </div>
 
-          <div class='custom-form-row'>
-            <label for='customSpellDesc'>Description</label>
-            <textarea id='customSpellDesc' rows='3' placeholder='Describe what this spell asks you to do.'></textarea>
-          </div>
-
-          <div class='custom-form-row custom-form-inline'>
-            <div>
-              <label for='customSpellReward'>Mana Reward</label>
-              <input id='customSpellReward' type='number' min='1' max='50' value='8'>
+          <div id="customSpellCard" class="custom-card hidden">
+            <p class="custom-help">Create your own spell and add it to the Tome.</p>
+            <div class="custom-form-row">
+              <label for="customSpellName">Name</label>
+              <input id="customSpellName" type="text" maxlength="60">
             </div>
-            <div>
-              <label for='customSpellCategory'>Category</label>
-              <select id='customSpellCategory'>
-                <option value='body'>⚗ Body</option>
-                <option value='mind'>🧠 Mind</option>
-                <option value='spirit'>💫 Spirit</option>
-                <option value='environment'>🌿 Environment</option>
-              </select>
+            <div class="custom-form-row">
+              <label for="customSpellDesc">Description</label>
+              <textarea id="customSpellDesc" rows="3"></textarea>
             </div>
-          </div>
-
-          <div class='custom-actions'>
-            <button id='saveCustomSpell' class='action-button'>Save Spell</button>
-          </div>
-        </div>
-        
-        <div class='spell-category'>
-          <h3 class='category-title'>⚗ Body Enhancement Spells</h3>
-          <ul id='bodySpells' class='spell-list'></ul>
-        </div>
-        
-        <div class='spell-category'>
-          <h3 class='category-title'>🧠 Mind Fortification Spells</h3>
-          <ul id='mindSpells' class='spell-list'></ul>
-        </div>
-        
-        <div class='spell-category'>
-          <h3 class='category-title'>💫 Spirit Restoration Spells</h3>
-          <ul id='spiritSpells' class='spell-list'></ul>
-        </div>
-        
-        <div class='spell-category'>
-          <h3 class='category-title'>🌿 Environment Purification</h3>
-          <ul id='environmentSpells' class='spell-list'></ul>
-        </div>
-      </section>
-
-      <section id='stats' class='spell-view'>
-        <h2 class='chapter-title'>Your Journey</h2>
-        <div class='chapter-divider'>✦ ✦ ✦</div>
-        
-        <div class='stat-cards'>
-          <div class='stat-card'>
-            <div class='stat-icon'>🔥</div>
-            <div class='stat-value' id='streak'>0</div>
-            <div class='stat-label'>Day Streak</div>
-          </div>
-          
-          <div class='stat-card'>
-            <div class='stat-icon'>⚡</div>
-            <div class='stat-value' id='totalCasts'>0</div>
-            <div class='stat-label'>Total Casts</div>
-          </div>
-          
-          <div class='stat-card'>
-            <div class='stat-icon'>🏆</div>
-            <div class='stat-value' id='level'>1</div>
-            <div class='stat-label'>Wizard Level</div>
-          </div>
-        </div>
-
-        <div class='progress-section'>
-          <h3 class='section-subtitle'>Experience Progress</h3>
-          <div class='xp-bar'>
-            <div class='xp-fill' id='xpFill'></div>
-            <div class='xp-text' id='xpText'>0 / 100 XP</div>
-          </div>
-        </div>
-
-        <div class='achievements-section'>
-          <h3 class='section-subtitle'>Achievements Unlocked</h3>
-          <div id='achievementsList' class='achievements-grid'></div>
-        </div>
-      </section>
-
-      <section id='rituals' class='spell-view'>
-        <h2 class='chapter-title'>Sacred Rituals</h2>
-        <div class='chapter-divider'>✦ ✦ ✦</div>
-        <p class='spell-intro'>Powerful multi-step ceremonies for transformation.</p>
-
-        <div class='spell-library-controls'>
-          <button id='toggleCustomRitual' class='secondary-button'>✚ Custom Ritual</button>
-        </div>
-
-        <div id='customRitualCard' class='custom-card hidden'>
-          <h3 class='section-subtitle'>Create Custom Ritual</h3>
-          <p class='custom-help'>Define a multi-step ceremony. Each line is one step.</p>
-          
-          <div class='custom-form-row'>
-            <label for='customRitualName'>Ritual Name</label>
-            <input id='customRitualName' type='text' maxlength='80' placeholder='e.g. Sunday Reset Ceremony'>
-          </div>
-
-          <div class='custom-form-row'>
-            <label for='customRitualDesc'>Description</label>
-            <textarea id='customRitualDesc' rows='3' placeholder='What is the intention of this ritual?'></textarea>
-          </div>
-
-          <div class='custom-form-row'>
-            <label for='customRitualSteps'>Steps (one per line)</label>
-            <textarea id='customRitualSteps' rows='5' placeholder='e.g.&#10;Tidy up my workspace&#10;Plan the week ahead&#10;Make a warm drink&#10;Reflect on last week'></textarea>
-          </div>
-
-          <div class='custom-form-row custom-form-inline'>
-            <div>
-              <label for='customRitualReward'>Mana Reward</label>
-              <input id='customRitualReward' type='number' min='5' max='100' value='35'>
+            <div class="custom-form-row custom-form-inline">
+              <div>
+                <label for="customSpellCategory">Category</label>
+                <select id="customSpellCategory">
+                  <option value="body">Body</option>
+                  <option value="mind">Mind</option>
+                  <option value="spirit">Spirit</option>
+                  <option value="environment">Environment</option>
+                </select>
+              </div>
+              <div>
+                <label for="customSpellReward">Mana Reward</label>
+                <input id="customSpellReward" type="number" min="1" max="50" value="8">
+              </div>
+            </div>
+            <div class="custom-actions">
+              <button id="saveCustomSpell" class="action-button">Save Spell</button>
             </div>
           </div>
 
-          <div class='custom-actions'>
-            <button id='saveCustomRitual' class='action-button'>Save Ritual</button>
+          <div class='spell-category'>
+            <h3 class='category-title'>⚗ Body Enhancement Spells</h3>
+            <ul id='bodySpells' class='spell-list'></ul>
           </div>
-        </div>
 
-        <ul id='ritualsList' class='ritual-list'></ul>
-      </section>
-    </main>
+          <div class='spell-category'>
+            <h3 class='category-title'>🧠 Mind Fortification Spells</h3>
+            <ul id='mindSpells' class='spell-list'></ul>
+          </div>
 
-    <footer class='grimoire-footer'>
-      <div class='footer-rune'>⟐</div>
-      <div class='footer-text'>May your path be illuminated</div>
-    </footer>
+          <div class='spell-category'>
+            <h3 class='category-title'>💫 Spirit Restoration Spells</h3>
+            <ul id='spiritSpells' class='spell-list'></ul>
+          </div>
+
+          <div class='spell-category'>
+            <h3 class='category-title'>🌿 Environment Purification</h3>
+            <ul id='environmentSpells' class='spell-list'></ul>
+          </div>
+        </section>
+
+        <!-- STATS -->
+        <section id='stats' class='spell-view'>
+          <h2 class='chapter-title'>Your Journey</h2>
+          <div class='chapter-divider'>✦ ✦ ✦</div>
+
+          <div class='stat-cards'>
+            <div class='stat-card'>
+              <div class='stat-icon'>🔥</div>
+              <div class='stat-value' id='streak'>0</div>
+              <div class='stat-label'>Day Streak</div>
+            </div>
+
+            <div class='stat-card'>
+              <div class='stat-icon'>⚡</div>
+              <div class='stat-value' id='totalCasts'>0</div>
+              <div class='stat-label'>Total Casts</div>
+            </div>
+
+            <div class='stat-card'>
+              <div class='stat-icon'>🏆</div>
+              <div class='stat-value' id='level'>1</div>
+              <div class='stat-label'>Wizard Level</div>
+            </div>
+          </div>
+
+          <div class='progress-section'>
+            <h3 class='section-subtitle'>Experience Progress</h3>
+            <div class='xp-bar'>
+              <div class='xp-fill' id='xpFill'></div>
+              <div class='xp-text' id='xpText'>0 / 100 XP</div>
+            </div>
+          </div>
+
+          <div class='achievements-section'>
+            <h3 class='section-subtitle'>Achievements Unlocked</h3>
+            <div id='achievementsList' class='achievements-grid'></div>
+          </div>
+        </section>
+
+        <!-- RITUALS -->
+        <section id='rituals' class='spell-view'>
+          <h2 class='chapter-title'>Sacred Rituals</h2>
+          <div class='chapter-divider'>✦ ✦ ✦</div>
+          <p class='spell-intro'>Powerful multi-step ceremonies for transformation.</p>
+
+          <button id="toggleCustomRitual" class="secondary-button">✚ Custom Ritual</button>
+
+          <div id="customRitualCard" class="custom-card hidden">
+            <p class="custom-help">Define a multi-step ritual and track it like the built-in ones.</p>
+            <div class="custom-form-row">
+              <label for="customRitualName">Name</label>
+              <input id="customRitualName" type="text" maxlength="60">
+            </div>
+            <div class="custom-form-row">
+              <label for="customRitualDesc">Description</label>
+              <textarea id="customRitualDesc" rows="2"></textarea>
+            </div>
+            <div class="custom-form-row">
+              <label for="customRitualSteps">Steps (one per line)</label>
+              <textarea id="customRitualSteps" rows="4"></textarea>
+            </div>
+            <div class="custom-form-row">
+              <label for="customRitualReward">Mana Reward</label>
+              <input id="customRitualReward" type="number" min="5" max="100" value="30">
+            </div>
+            <div class="custom-actions">
+              <button id="saveCustomRitual" class="action-button">Save Ritual</button>
+            </div>
+          </div>
+
+          <ul id='ritualsList' class='ritual-list'></ul>
+        </section>
+      </main>
+
+      <footer class='grimoire-footer'>
+        <div class='footer-rune'>⟐</div>
+        <div class='footer-text'>May your path be illuminated</div>
+      </footer>
+    </div>
   </div>
 </div>
 
@@ -231,9 +241,11 @@
   <div class='effect-text'>+<span id='effectMana'>0</span> ✨</div>
 </div>
 
+<canvas id="spellCanvas" class="spell-canvas"></canvas>
+
 <script src='script.js'></script>
 <script>
-if('serviceWorker' in navigator){
+if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('service-worker.js');
 }
 </script>

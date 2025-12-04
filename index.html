@@ -38,6 +38,9 @@
       </div>
     </header>
 
+    <!-- Spell-cast animation canvas -->
+    <canvas id="spellCanvas" class="spell-canvas" aria-hidden="true"></canvas>
+
     <nav class='spell-tabs'>
       <button class='spell-tab active' data-tab='daily'>
         <span class='tab-icon'>☀</span>
@@ -58,6 +61,7 @@
     </nav>
 
     <main class='grimoire-content'>
+      <!-- DAILY -->
       <section id='daily' class='spell-view active'>
         <h2 class='chapter-title'>Daily Quests</h2>
         <div class='chapter-divider'>✦ ✦ ✦</div>
@@ -66,10 +70,55 @@
         <ul id='dailyList' class='spell-list'></ul>
       </section>
 
+      <!-- SPELL LIBRARY -->
       <section id='spells' class='spell-view'>
         <h2 class='chapter-title'>The Complete Spell Library</h2>
         <div class='chapter-divider'>✦ ✦ ✦</div>
-        <p class='spell-intro'>All known spells for wellness and vitality.</p>
+        <p class='spell-intro'>
+          All known spells for wellness and vitality. Tap to quick cast, add to your daily spread, or create your own.
+        </p>
+
+        <div class="spell-library-controls">
+          <input type="text" id="spellSearch" placeholder="Search spells by name or effect...">
+          <button id="clearSearch" class="secondary-button">Clear</button>
+          <button id="toggleCustomSpell" class="secondary-button">✚ Custom Spell</button>
+        </div>
+
+        <!-- Custom Spell Creator -->
+        <div id="customSpellCard" class="custom-card hidden">
+          <h3 class="section-subtitle">Create Custom Spell</h3>
+          <p class="custom-help">Design your own life spell. It will appear in the library and can be added to your daily quests.</p>
+          
+          <div class="custom-form-row">
+            <label for="customSpellName">Spell Name</label>
+            <input id="customSpellName" type="text" maxlength="60" placeholder="e.g. Gentle Wake-Up Ritual">
+          </div>
+
+          <div class="custom-form-row">
+            <label for="customSpellDesc">Description</label>
+            <textarea id="customSpellDesc" rows="3" placeholder="Describe what this spell asks you to do."></textarea>
+          </div>
+
+          <div class="custom-form-row custom-form-inline">
+            <div>
+              <label for="customSpellReward">Mana Reward</label>
+              <input id="customSpellReward" type="number" min="1" max="50" value="8">
+            </div>
+            <div>
+              <label for="customSpellCategory">Category</label>
+              <select id="customSpellCategory">
+                <option value="body">⚗ Body</option>
+                <option value="mind">🧠 Mind</option>
+                <option value="spirit">💫 Spirit</option>
+                <option value="environment">🌿 Environment</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="custom-actions">
+            <button id="saveCustomSpell" class="action-button">Save Spell</button>
+          </div>
+        </div>
         
         <div class='spell-category'>
           <h3 class='category-title'>⚗ Body Enhancement Spells</h3>
@@ -92,6 +141,7 @@
         </div>
       </section>
 
+      <!-- STATS -->
       <section id='stats' class='spell-view'>
         <h2 class='chapter-title'>Your Journey</h2>
         <div class='chapter-divider'>✦ ✦ ✦</div>
@@ -130,10 +180,48 @@
         </div>
       </section>
 
+      <!-- RITUALS -->
       <section id='rituals' class='spell-view'>
         <h2 class='chapter-title'>Sacred Rituals</h2>
         <div class='chapter-divider'>✦ ✦ ✦</div>
-        <p class='spell-intro'>Powerful multi-step ceremonies for transformation.</p>
+        <p class='spell-intro'>Powerful multi-step ceremonies for transformation. Create your own rituals and track their completion.</p>
+
+        <div class="spell-library-controls">
+          <button id="toggleCustomRitual" class="secondary-button">✚ Custom Ritual</button>
+        </div>
+
+        <!-- Custom Ritual Creator -->
+        <div id="customRitualCard" class="custom-card hidden">
+          <h3 class="section-subtitle">Create Custom Ritual</h3>
+          <p class="custom-help">Define a multi-step ceremony. Each line is one step.</p>
+          
+          <div class="custom-form-row">
+            <label for="customRitualName">Ritual Name</label>
+            <input id="customRitualName" type="text" maxlength="80" placeholder="e.g. Sunday Reset Ceremony">
+          </div>
+
+          <div class="custom-form-row">
+            <label for="customRitualDesc">Description</label>
+            <textarea id="customRitualDesc" rows="3" placeholder="What is the intention of this ritual?"></textarea>
+          </div>
+
+          <div class="custom-form-row">
+            <label for="customRitualSteps">Steps (one per line)</label>
+            <textarea id="customRitualSteps" rows="5" placeholder="e.g.&#10;Tidy up my workspace&#10;Plan the week ahead&#10;Make a warm drink&#10;Reflect on last week"></textarea>
+          </div>
+
+          <div class="custom-form-row custom-form-inline">
+            <div>
+              <label for="customRitualReward">Mana Reward</label>
+              <input id="customRitualReward" type="number" min="5" max="100" value="35">
+            </div>
+          </div>
+
+          <div class="custom-actions">
+            <button id="saveCustomRitual" class="action-button">Save Ritual</button>
+          </div>
+        </div>
+
         <ul id='ritualsList' class='ritual-list'></ul>
       </section>
     </main>

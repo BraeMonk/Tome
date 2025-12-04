@@ -182,6 +182,7 @@ function checkAchievements() {
 function showSpellEffect(mana) {
   const effect = document.getElementById('spellEffect');
   const manaText = document.getElementById('effectMana');
+  if (!effect || !manaText) return;
   manaText.textContent = mana;
   effect.classList.add('active');
   triggerSpellCanvasBurst();
@@ -420,11 +421,13 @@ function renderSpellCategory(category, elementId, filterText = '') {
 
 function renderSpellLibrary(filterCategory = 'all', searchText = '') {
   const categories = ['body', 'mind', 'spirit', 'environment'];
+  const q = searchText || '';
   categories.forEach(cat => {
     if (filterCategory !== 'all' && filterCategory !== cat) {
-      renderSpellCategory(cat, cat + 'Spells', searchText + ' __filterout__'); // cheap skip
+      const ul = document.getElementById(cat + 'Spells');
+      if (ul) ul.innerHTML = '';
     } else {
-      renderSpellCategory(cat, cat + 'Spells', searchText);
+      renderSpellCategory(cat, cat + 'Spells', q);
     }
   });
 }
@@ -544,9 +547,10 @@ function handleCast(spellId) {
 
 // Click delegation
 document.addEventListener('click', e => {
-  const castId = e.target.dataset.cast;
-  if (castId) {
-    handleCast(castId);
+  // 🔧 FIX: use closest so clicks on inner elements still count
+  const castEl = e.target.closest('[data-cast]');
+  if (castEl && castEl.dataset.cast) {
+    handleCast(castEl.dataset.cast);
     return;
   }
 

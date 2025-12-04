@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <link rel="manifest" href="manifest.json" />
   <link rel="stylesheet" href="styles.css" />
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital@0;1&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Crimson+Text:ital@0;1&family=Philosopher:wght@400;700&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -16,8 +16,13 @@
   <!-- =============== HOME ORBIT SCREEN =============== -->
   <section class="home-section">
     <div class="home-inner">
-      <h1 class="home-title">Tome</h1>
-      <p class="home-subtitle">Book of Life Spells</p>
+      <div class="home-header-glow"></div>
+      <h1 class="home-title">
+        <span class="title-rune">⟐</span>
+        Tome
+        <span class="title-rune">⟐</span>
+      </h1>
+      <p class="home-subtitle">Book of Life Spells & Sacred Rituals</p>
 
       <div class="orbit-wrapper">
         <!-- Center mana orb -->
@@ -25,6 +30,7 @@
           <div class="home-orb">
             <div class="home-orb-glow"></div>
             <div class="home-orb-inner">
+              <div class="orb-shine"></div>
               <div class="home-orb-mana" id="homeManaDisplay">0</div>
               <div class="home-orb-label">Mana</div>
               <div class="home-orb-level" id="homeLevelTitle">Novice</div>
@@ -37,12 +43,30 @@
         <div class="orbit-spells" id="orbitDailyContainer"></div>
       </div>
 
+      <div class="home-stats-preview">
+        <div class="mini-stat">
+          <span class="mini-stat-icon">🔥</span>
+          <span class="mini-stat-value" id="homeStreak">0</span>
+          <span class="mini-stat-label">Streak</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-icon">⚡</span>
+          <span class="mini-stat-value" id="homeCasts">0</span>
+          <span class="mini-stat-label">Casts</span>
+        </div>
+        <div class="mini-stat">
+          <span class="mini-stat-icon">🏆</span>
+          <span class="mini-stat-value" id="homeAchievements">0</span>
+          <span class="mini-stat-label">Unlocked</span>
+        </div>
+      </div>
+
       <p class="home-hint">
-        Tap a spell to cast it · Tap the grimoire below to open the full book
+        ✨ Tap a spell to cast it · Open the grimoire below for your full spell library ✨
       </p>
 
-      <div style="text-align:center; margin-top: 8px;">
-        <button id="newSpreadHome" class="action-button">
+      <div style="text-align:center; margin-top: 12px;">
+        <button id="newSpreadHome" class="action-button pulse-button">
           🔮 Draw New Spread
         </button>
       </div>
@@ -51,7 +75,11 @@
 
   <!-- =============== GRIMOIRE DOCK + FULL BOOK =============== -->
   <section class="book-container">
-    <div class="book-dock-label">Tap the Tome to open the full grimoire</div>
+    <div class="book-dock-label">
+      <span class="dock-icon">📖</span>
+      Tap the Tome to open the full grimoire
+      <span class="dock-icon">📖</span>
+    </div>
 
     <div class="book-cover" id="bookCover">
       <div class="cover-ornament">
@@ -102,7 +130,7 @@
         <section id="daily" class="spell-view active">
           <h2 class="chapter-title">Daily Quests</h2>
           <div class="chapter-divider">✦ ✦ ✦</div>
-          <p class="spell-intro">Complete these sacred tasks before the sun sets to maintain your streak.</p>
+          <p class="spell-intro">Complete these sacred tasks before the sun sets to maintain your streak and grow your power.</p>
 
           <button id="newSpread" class="action-button">
             🔮 Draw New Spread
@@ -114,11 +142,11 @@
         <section id="spells" class="spell-view">
           <h2 class="chapter-title">The Complete Spell Library</h2>
           <div class="chapter-divider">✦ ✦ ✦</div>
-          <p class="spell-intro">Browse all known spells for body, mind, spirit, and environment.</p>
+          <p class="spell-intro">Browse all known spells for body, mind, spirit, and environment. Create your own custom spells to personalize your practice.</p>
 
           <div class="spell-library-controls">
-            <input id="spellSearch" type="text" placeholder="Search spells..." />
-            <button class="secondary-button" data-filter="all">All</button>
+            <input id="spellSearch" type="text" placeholder="🔍 Search spells..." />
+            <button class="secondary-button filter-active" data-filter="all">All</button>
             <button class="secondary-button" data-filter="body">Body</button>
             <button class="secondary-button" data-filter="mind">Mind</button>
             <button class="secondary-button" data-filter="spirit">Spirit</button>
@@ -127,27 +155,28 @@
 
           <!-- Custom Spell Creator -->
           <div class="custom-card">
+            <h3 class="custom-card-title">⚗ Spell Crafting Station</h3>
             <div class="custom-help">
-              Create your own spell — it will appear in the library and can be drawn in future daily spreads.
+              Forge your own spell — it will appear in the library and can be drawn in future daily spreads.
             </div>
             <form id="customSpellForm">
               <div class="custom-form-row custom-form-inline">
                 <div>
-                  <label for="customSpellName">Name</label>
-                  <input id="customSpellName" type="text" required />
+                  <label for="customSpellName">Spell Name</label>
+                  <input id="customSpellName" type="text" placeholder="e.g., Morning Tea Ritual" required />
                 </div>
                 <div>
-                  <label for="customSpellReward">Mana</label>
+                  <label for="customSpellReward">Mana Reward</label>
                   <input id="customSpellReward" type="number" min="1" max="99" value="8" required />
                 </div>
               </div>
               <div class="custom-form-row">
                 <label for="customSpellCategory">Category</label>
                 <select id="customSpellCategory">
-                  <option value="body">Body</option>
-                  <option value="mind">Mind</option>
-                  <option value="spirit">Spirit</option>
-                  <option value="environment">Environment</option>
+                  <option value="body">⚗ Body</option>
+                  <option value="mind">🧠 Mind</option>
+                  <option value="spirit">💫 Spirit</option>
+                  <option value="environment">🌿 Environment</option>
                 </select>
               </div>
               <div class="custom-form-row">
@@ -161,22 +190,38 @@
           </div>
 
           <div class="spell-category">
-            <h3 class="category-title">⚗ Body Enhancement Spells</h3>
+            <h3 class="category-title">
+              <span class="category-icon">⚗</span>
+              Body Enhancement Spells
+              <span class="category-count" id="bodyCount"></span>
+            </h3>
             <ul id="bodySpells" class="spell-list"></ul>
           </div>
 
           <div class="spell-category">
-            <h3 class="category-title">🧠 Mind Fortification Spells</h3>
+            <h3 class="category-title">
+              <span class="category-icon">🧠</span>
+              Mind Fortification Spells
+              <span class="category-count" id="mindCount"></span>
+            </h3>
             <ul id="mindSpells" class="spell-list"></ul>
           </div>
 
           <div class="spell-category">
-            <h3 class="category-title">💫 Spirit Restoration Spells</h3>
+            <h3 class="category-title">
+              <span class="category-icon">💫</span>
+              Spirit Restoration Spells
+              <span class="category-count" id="spiritCount"></span>
+            </h3>
             <ul id="spiritSpells" class="spell-list"></ul>
           </div>
 
           <div class="spell-category">
-            <h3 class="category-title">🌿 Environment Purification</h3>
+            <h3 class="category-title">
+              <span class="category-icon">🌿</span>
+              Environment Purification
+              <span class="category-count" id="environmentCount"></span>
+            </h3>
             <ul id="environmentSpells" class="spell-list"></ul>
           </div>
         </section>
@@ -224,17 +269,18 @@
         <section id="rituals" class="spell-view">
           <h2 class="chapter-title">Sacred Rituals</h2>
           <div class="chapter-divider">✦ ✦ ✦</div>
-          <p class="spell-intro">Powerful multi-step ceremonies for transformation.</p>
+          <p class="spell-intro">Powerful multi-step ceremonies for deep transformation. Complete all steps to unlock their full power.</p>
 
           <!-- Custom Ritual Creator -->
           <div class="custom-card">
+            <h3 class="custom-card-title">🌙 Ritual Crafting Chamber</h3>
             <div class="custom-help">
-              Define your own ritual — one step per line. Completing all steps grants its full mana reward.
+              Design your own ritual — one step per line. Completing all steps grants its full mana reward.
             </div>
             <form id="customRitualForm">
               <div class="custom-form-row">
                 <label for="customRitualName">Ritual Name</label>
-                <input id="customRitualName" type="text" required />
+                <input id="customRitualName" type="text" placeholder="e.g., Sunday Reset Ceremony" required />
               </div>
               <div class="custom-form-row">
                 <label for="customRitualReward">Mana Reward</label>
@@ -242,7 +288,7 @@
               </div>
               <div class="custom-form-row">
                 <label for="customRitualSteps">Steps (one per line)</label>
-                <textarea id="customRitualSteps" rows="3" required></textarea>
+                <textarea id="customRitualSteps" rows="3" placeholder="Clean workspace&#10;Light a candle&#10;Meditate for 10 minutes" required></textarea>
               </div>
               <div class="custom-actions">
                 <button type="submit" class="action-button">➕ Add Ritual</button>
@@ -256,7 +302,7 @@
 
       <footer class="grimoire-footer">
         <div class="footer-rune">⟐</div>
-        <div class="footer-text">May your path be illuminated</div>
+        <div class="footer-text">May your path be illuminated with wisdom and power</div>
       </footer>
     </div>
   </section>

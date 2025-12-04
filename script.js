@@ -35,7 +35,7 @@ const SPELLS = {
   ]
 };
 
-const RITUALS = [
+const RITUALS_BASE = [
   {
     id:'morning',
     name:'Dawn Awakening Ritual',
@@ -81,8 +81,35 @@ let state = {
   level: 1,
   xp: 0,
   ritualProgress: {},
-  categoriesCast: []
+  categoriesCast: [],
+  favorites: [],
+  customSpells: [],
+  customRituals: []
 };
+
+/* === Helpers for combined data === */
+
+function getAllSpells() {
+  return [
+    ...SPELLS.body,
+    ...SPELLS.mind,
+    ...SPELLS.spirit,
+    ...SPELLS.environment,
+    ...state.customSpells
+  ];
+}
+
+function getSpellsByCategory(category) {
+  const base = SPELLS[category] || [];
+  const custom = state.customSpells.filter(s => s.category === category);
+  return [...base, ...custom];
+}
+
+function getAllRituals() {
+  return [...RITUALS_BASE, ...state.customRituals];
+}
+
+/* === Utility === */
 
 function today() {
   return new Date().toISOString().slice(0, 10);
@@ -101,6 +128,9 @@ function load() {
     if (!state.xp) state.xp = 0;
     if (!state.ritualProgress) state.ritualProgress = {};
     if (!state.categoriesCast) state.categoriesCast = [];
+    if (!state.favorites) state.favorites = [];
+    if (!state.customSpells) state.customSpells = [];
+    if (!state.customRituals) state.customRituals = [];
   }
 }
 
@@ -116,6 +146,8 @@ function getLevelTitle(level) {
   if (level < 50) return 'Archmage';
   return 'Grand Sorcerer';
 }
+
+/* === Achievements === */
 
 function checkAchievements() {
   let newUnlocks = [];
@@ -150,23 +182,116 @@ function checkAchievements() {
   return newUnlocks;
 }
 
+/* === Spell-cast UI effect (popup + canvas) === */
+
+let spellCanvas = null;
+let spellCtx = null;
+let spellParticles = [];
+let spellAnimating = false;
+
+function initSpellCanvas() {
+  spellCanvas = document.getElementById('spellCanvas');
+  if (!spellCanvas) return;
+  spellCtx = spellCanvas.getContext('2d');
+  resizeSpellCanvas();
+  window.addEventListener('resize', resizeSpellCanvas);
+}
+
+function resizeSpellCanvas() {
+  if (!spellCanvas || !spellCtx) return;
+  spellCanvas.width = window.innerWidth;
+  spellCanvas.height = window.innerHeight;
+}
+
+function triggerSpellCanvas(mana) {
+  if (!spellCanvas || !spellCtx) return;
+
+  const count = 30 + Math.min(40, Math.floor(mana / 2));
+  const centerX = window.innerWidth / 2;
+  const centerY = window.innerHeight / 2;
+
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 3;
+    const isGold = Math.random() < 0.5;
+    spellParticles.push({
+      x: centerX,
+      y: centerY,
+      vx: Math.cos(angle) * speed,
+      vy: Math.sin(angle) * speed,
+      life: 0,
+      maxLife: 40 + Math.random() * 20,
+      radius: 2 + Math.random() * 3,
+      type: isGold ? 'gold' : 'arcane'
+    });
+  }
+
+  if (!spellAnimating) {
+    spellAnimating = true;
+    spellCanvas.classList.add('active');
+    requestAnimationFrame(animateSpellCanvas);
+  }
+}
+
+function animateSpellCanvas() {
+  if (!spellCanvas || !spellCtx) return;
+
+  spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
+
+  spellParticles.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    p.life++;
+  });
+
+  spellParticles = spellParticles.filter(p => p.life < p.maxLife);
+
+  spellParticles.forEach(p => {
+    const alpha = 1 - p.life / p.maxLife;
+    spellCtx.beginPath();
+    spellCtx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+    if (p.type === 'gold') {
+      spellCtx.fillStyle = `rgba(255, 215, 0, ${alpha})`;
+    } else {
+      spellCtx.fillStyle = `rgba(138, 43, 226, ${alpha})`;
+    }
+    spellCtx.fill();
+  });
+
+  if (spellParticles.length > 0) {
+    requestAnimationFrame(animateSpellCanvas);
+  } else {
+    spellAnimating = false;
+    spellCanvas.classList.remove('active');
+    spellCtx.clearRect(0, 0, spellCanvas.width, spellCanvas.height);
+  }
+}
+
 function showSpellEffect(mana) {
   const effect = document.getElementById('spellEffect');
   const manaText = document.getElementById('effectMana');
   
   manaText.textContent = mana;
   effect.classList.add('active');
+  triggerSpellCanvas(mana);
   
   setTimeout(() => {
     effect.classList.remove('active');
   }, 600);
 }
 
+/* === State init === */
+
 load();
 
 function generateDaily() {
-  const allSpells = [...SPELLS.body, ...SPELLS.mind, ...SPELLS.spirit, ...SPELLS.environment];
-  state.daily = allSpells.sort(() => 0.5 - Math.random()).slice(0, 5).map(s => s.id);
+  const allSpells = getAllSpells();
+  if (allSpells.length === 0) return;
+  state.daily = allSpells
+    .slice()
+    .sort(() => 0.5 - Math.random())
+    .slice(0, 5)
+    .map(s => s.id);
   state.lastDay = today();
   save();
 }
@@ -178,6 +303,8 @@ if (state.lastDay !== today()) {
   }
 }
 
+/* === Render functions === */
+
 function renderHeader() {
   document.getElementById('manaDisplay').textContent = state.mana;
   document.getElementById('totalCasts').textContent = state.totalCasts;
@@ -185,7 +312,6 @@ function renderHeader() {
   document.getElementById('level').textContent = state.level;
   document.getElementById('levelDisplay').textContent = getLevelTitle(state.level);
   
-  const xpNeeded = state.level * 100;
   const xpProgress = state.xp % 100;
   const xpPercent = (xpProgress / 100) * 100;
   
@@ -197,7 +323,7 @@ function renderDaily() {
   const ul = document.getElementById('dailyList');
   ul.innerHTML = '';
   
-  const allSpells = [...SPELLS.body, ...SPELLS.mind, ...SPELLS.spirit, ...SPELLS.environment];
+  const allSpells = getAllSpells();
   
   state.daily.forEach(id => {
     const sp = allSpells.find(s => s.id === id);
@@ -218,12 +344,21 @@ function renderSpellCategory(category, elementId) {
   const ul = document.getElementById(elementId);
   ul.innerHTML = '';
   
-  SPELLS[category].forEach(sp => {
+  const spells = getSpellsByCategory(category);
+  spells.forEach(sp => {
     const li = document.createElement('li');
+    const isFav = state.favorites.includes(sp.id);
     li.innerHTML = `
       <span class="spell-name">${sp.name}</span>
       <div class="spell-desc">${sp.desc}</div>
       <span class="spell-reward">+${sp.reward} ✨ Mana</span>
+      <div class="spell-actions">
+        <button class="cast-button small" data-cast="${sp.id}">⚡ Quick Cast</button>
+        <button class="secondary-button small" data-add-daily="${sp.id}">➕ Add to Daily</button>
+        <button class="icon-button favorite-button ${isFav ? 'active' : ''}" data-fav="${sp.id}">
+          ${isFav ? '★ Favourited' : '☆ Favourite'}
+        </button>
+      </div>
     `;
     ul.appendChild(li);
   });
@@ -249,7 +384,8 @@ function renderRituals() {
   const ul = document.getElementById('ritualsList');
   ul.innerHTML = '';
   
-  RITUALS.forEach(ritual => {
+  const rituals = getAllRituals();
+  rituals.forEach(ritual => {
     const li = document.createElement('li');
     li.className = 'ritual-item';
     
@@ -283,10 +419,152 @@ function renderRituals() {
   });
 }
 
+/* === Spell search === */
+
+function filterSpellLibrary(term) {
+  const query = term.trim().toLowerCase();
+  const items = document.querySelectorAll('#spells .spell-list li');
+  items.forEach(li => {
+    if (!query) {
+      li.style.display = '';
+      return;
+    }
+    const text = li.textContent.toLowerCase();
+    li.style.display = text.includes(query) ? '' : 'none';
+  });
+}
+
+function initSpellSearch() {
+  const input = document.getElementById('spellSearch');
+  const clearBtn = document.getElementById('clearSearch');
+  if (!input) return;
+
+  input.addEventListener('input', () => {
+    filterSpellLibrary(input.value);
+  });
+
+  if (clearBtn) {
+    clearBtn.addEventListener('click', () => {
+      input.value = '';
+      filterSpellLibrary('');
+    });
+  }
+}
+
+/* === Custom spell & ritual forms === */
+
+function toggleElement(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  el.classList.toggle('hidden');
+}
+
+function initCustomSpellForm() {
+  const toggleBtn = document.getElementById('toggleCustomSpell');
+  const saveBtn = document.getElementById('saveCustomSpell');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => toggleElement('customSpellCard'));
+  }
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const nameEl = document.getElementById('customSpellName');
+      const descEl = document.getElementById('customSpellDesc');
+      const rewardEl = document.getElementById('customSpellReward');
+      const categoryEl = document.getElementById('customSpellCategory');
+
+      const name = nameEl.value.trim();
+      const desc = descEl.value.trim();
+      const reward = Math.max(1, Math.min(50, parseInt(rewardEl.value || '8', 10)));
+      const category = categoryEl.value;
+
+      if (!name || !desc || !category) {
+        alert('Please fill in name, description, and category for your spell.');
+        return;
+      }
+
+      const id = 'cspell_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+      state.customSpells.push({
+        id,
+        name,
+        desc,
+        reward,
+        category
+      });
+
+      save();
+      renderSpellCategory('body', 'bodySpells');
+      renderSpellCategory('mind', 'mindSpells');
+      renderSpellCategory('spirit', 'spiritSpells');
+      renderSpellCategory('environment', 'environmentSpells');
+
+      nameEl.value = '';
+      descEl.value = '';
+      rewardEl.value = '8';
+      categoryEl.value = 'body';
+
+      alert('✨ Custom spell added to your Tome!');
+    });
+  }
+}
+
+function initCustomRitualForm() {
+  const toggleBtn = document.getElementById('toggleCustomRitual');
+  const saveBtn = document.getElementById('saveCustomRitual');
+  if (toggleBtn) {
+    toggleBtn.addEventListener('click', () => toggleElement('customRitualCard'));
+  }
+  if (saveBtn) {
+    saveBtn.addEventListener('click', () => {
+      const nameEl = document.getElementById('customRitualName');
+      const descEl = document.getElementById('customRitualDesc');
+      const stepsEl = document.getElementById('customRitualSteps');
+      const rewardEl = document.getElementById('customRitualReward');
+
+      const name = nameEl.value.trim();
+      const desc = descEl.value.trim();
+      const reward = Math.max(5, Math.min(100, parseInt(rewardEl.value || '35', 10)));
+
+      const steps = stepsEl.value
+        .split('\n')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+      if (!name || !desc || steps.length === 0) {
+        alert('Please add a name, description, and at least one step for your ritual.');
+        return;
+      }
+
+      const id = 'crit_' + Date.now() + '_' + Math.floor(Math.random() * 1000);
+
+      state.customRituals.push({
+        id,
+        name,
+        desc,
+        steps,
+        reward
+      });
+
+      save();
+      renderRituals();
+
+      nameEl.value = '';
+      descEl.value = '';
+      stepsEl.value = '';
+      rewardEl.value = '35';
+
+      alert('🕯️ Custom ritual added to your Tome!');
+    });
+  }
+}
+
+/* === Global click handlers === */
+
 document.addEventListener('click', e => {
+  // Spell cast (daily + library quick cast)
   if (e.target.dataset.cast) {
     const id = e.target.dataset.cast;
-    const allSpells = [...SPELLS.body, ...SPELLS.mind, ...SPELLS.spirit, ...SPELLS.environment];
+    const allSpells = getAllSpells();
     const sp = allSpells.find(s => s.id === id);
     
     if (!sp) return;
@@ -337,12 +615,45 @@ document.addEventListener('click', e => {
     }
   }
   
+  // Generate new daily spread
   if (e.target.id === 'newSpread') {
     generateDaily();
     renderDaily();
   }
+
+  // Add a library spell into today's daily list
+  if (e.target.dataset.addDaily) {
+    const id = e.target.dataset.addDaily;
+    if (!state.daily.includes(id)) {
+      state.daily.push(id);
+    }
+    state.daily = [...new Set(state.daily)];
+    state.lastDay = today();
+    save();
+    renderDaily();
+
+    e.target.textContent = 'Added to Daily';
+    e.target.classList.add('disabled');
+    e.target.disabled = true;
+  }
+
+  // Toggle favourites
+  if (e.target.dataset.fav) {
+    const id = e.target.dataset.fav;
+    const idx = state.favorites.indexOf(id);
+    if (idx === -1) {
+      state.favorites.push(id);
+      e.target.classList.add('active');
+      e.target.textContent = '★ Favourited';
+    } else {
+      state.favorites.splice(idx, 1);
+      e.target.classList.remove('active');
+      e.target.textContent = '☆ Favourite';
+    }
+    save();
+  }
   
-    // --- Tab switching ---
+  // Tab switching
   const tabButton = e.target.closest('.spell-tab');
   if (tabButton) {
     const tabId = tabButton.dataset.tab;
@@ -356,13 +667,17 @@ document.addEventListener('click', e => {
     if (view) view.classList.add('active');
   }
   
+  // Ritual step toggle
   if (e.target.classList.contains('ritual-step')) {
     const ritualId = e.target.dataset.ritual;
-    const stepIdx = parseInt(e.target.dataset.step);
+    const stepIdx = parseInt(e.target.dataset.step, 10);
     
     state.ritualProgress[ritualId][stepIdx] = !state.ritualProgress[ritualId][stepIdx];
     
-    const ritual = RITUALS.find(r => r.id === ritualId);
+    const rituals = getAllRituals();
+    const ritual = rituals.find(r => r.id === ritualId);
+    if (!ritual) return;
+
     const allComplete = state.ritualProgress[ritualId].every(s => s);
     
     if (allComplete) {
@@ -393,6 +708,8 @@ document.addEventListener('click', e => {
   }
 });
 
+/* === Book opening === */
+
 function openBook() {
   const cover = document.getElementById('bookCover');
   const pages = document.getElementById('bookPages');
@@ -406,6 +723,8 @@ function openBook() {
 
 document.getElementById('bookCover').addEventListener('click', openBook);
 
+/* === Background particles === */
+
 function createParticles() {
   const container = document.getElementById('particles');
   for (let i = 0; i < 20; i++) {
@@ -417,6 +736,9 @@ function createParticles() {
   }
 }
 
+/* === Init === */
+
+initSpellCanvas();
 createParticles();
 renderHeader();
 renderDaily();
@@ -426,3 +748,6 @@ renderSpellCategory('spirit', 'spiritSpells');
 renderSpellCategory('environment', 'environmentSpells');
 renderAchievements();
 renderRituals();
+initSpellSearch();
+initCustomSpellForm();
+initCustomRitualForm();
